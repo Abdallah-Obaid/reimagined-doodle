@@ -19,6 +19,8 @@ router.get('/sensorsNumber', sensorsNumber);
 // Fibaro routs
 router.get('/getTemperatureFibaro/', getTemperatureFibaro);
 router.get('/getHistoricalTemperatureFibaro/', getHistoricalTemperatureFibaro);
+router.get('/getHistoricalDustFibaro/', getHistoricalDustFibaro);
+router.get('/getHistoricalCo2Fibaro/', getHistoricalCo2Fibaro);
 router.get('/getHumidityFibaro/', getHumidityFibaro);
 router.get('/getSmoke/', getSmoke);
 router.get('/getDust/', getDust);
@@ -33,6 +35,8 @@ router.get('/openDoorSwitch/', openDoorSwitch);
 // Meraki routs
 router.get('/getTemperatureMeraki/', getTemperatureMeraki);
 router.get('/getHistoricalTemperatureMeraki/', getHistoricalTemperatureMeraki);
+router.get('/getHistoricalHumidityMeraki/', getHistoricalHumidityMeraki);
+router.get('/getHistoricalWaterLeakMeraki/', getHistoricalWaterLeakMeraki);
 router.get('/getHumidityMeraki', getHumidityMeraki);
 router.get('/getWaterLeakTest', getWaterLeakTest);
 router.get('/getDoorStatus', getDoorStatus);
@@ -65,7 +69,7 @@ async function loadRtspStream(req, res, next) {
   var recordDuration = 120; //in sec
   var stream = await new Stream({
     name: 'name',
-    streamUrl: `rtsp://${CAMERAIP}:${CAMERAPORT}/live`,//`rtsp://${CAMERAIP}:${CAMERAPORT}/live`,//'rtsp://192.168.128.2:9000/live'
+    streamUrl: `rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov`,//`rtsp://${CAMERAIP}:${CAMERAPORT}/live`,//'rtsp://192.168.128.2:9000/live'
     wsPort: 9999,
     ffmpegOptions: { // options ffmpeg flags
 
@@ -120,7 +124,7 @@ async function loadRtspStream(req, res, next) {
   });
   res.send('IT WORK');
 }
-  // loadRtspStream();
+loadRtspStream();
 
 /** 
  * This function will get the temperature from Fibaro sensor
@@ -240,6 +244,31 @@ async function getDust(req, res, next) {
 }
 
 /** 
+ * This function will get the historical dust data from Fibaro sensor
+ * @param {obj} req 
+ * @param {obj} res 
+ * @param {function} next 
+ */
+ async function getHistoricalDustFibaro(req, res, next) {
+  var dustDeviceID = req.query.deviceID;
+  var t0 = req.query.t0;
+  var t1 = req.query.t1;
+  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS}/api/energy/${t1}-${t0}/now/summary-graph/devices/energy/${dustDeviceID}`)
+    .set('Content-Type', 'application/x-www-form-urlencoded')
+    .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
+    .then(dustData => {
+
+      // console.log('powerData', powerData.body);
+      if (dustData.body) { res.status(200).send(dustData.body); } else { res.status(200).send([]); }
+
+    })
+    .catch(err => {
+      console.log('Dust sensor error: ', err);
+      res.status(403).send('Dust sensor error');
+    });
+}
+
+/** 
  * This function will get the Co2 from Fibaro sensor
  * @param {obj} req 
  * @param {obj} res 
@@ -252,8 +281,33 @@ async function getCo2(req, res, next) {
     .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
     .then(co2Data => {
 
-      // console.log('dustData', dustData.body.properties.value);
+      // console.log('co2Data', co2Data.body.properties.value);
       if (co2Data.body.properties.value) { res.status(200).send(co2Data.body.properties.value); } else { res.status(200).send([]); }
+
+    })
+    .catch(err => {
+      console.log('Co2 sensor error: ', err);
+      res.status(403).send('Co2 sensor error');
+    });
+}
+
+/** 
+ * This function will get the historical co2 data from Fibaro sensor
+ * @param {obj} req 
+ * @param {obj} res 
+ * @param {function} next 
+ */
+ async function getHistoricalCo2Fibaro(req, res, next) {
+  var co2DeviceID = req.query.deviceID;
+  var t0 = req.query.t0;
+  var t1 = req.query.t1;
+  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS}/api/energy/${t1}-${t0}/now/summary-graph/devices/energy/${co2DeviceID}`)
+    .set('Content-Type', 'application/x-www-form-urlencoded')
+    .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
+    .then(co2Data => {
+
+      // console.log('powerData', powerData.body);
+      if (co2Data.body) { res.status(200).send(co2Data.body); } else { res.status(200).send([]); }
 
     })
     .catch(err => {
@@ -437,6 +491,35 @@ async function getHumidityMeraki(req, res, next) {
 }
 
 /** 
+ * This function will get the historical Humidity from Meraki sensor
+ * @param {obj} req 
+ * @param {obj} res 
+ * @param {function} next 
+ */
+ async function getHistoricalHumidityMeraki(req, res, next) {
+  var deviceSerial = req.query.deviceSerial;
+  var merakiNetworkID = req.query.merakiNetworkID;
+  var metric = req.query.metric;
+  var t0 = req.query.t0;
+  var t1 = req.query.t1;
+  var resolution  = req.query.resolution;
+  superagent.get(`https://api.meraki.com/api/v1/networks/${merakiNetworkID}/sensors/stats/historicalBySensor?metric=${metric}&serial=${deviceSerial}&t0=${t0}&t1=${t1}&resolution=${resolution}`)
+  .set('Content-Type', 'application/x-www-form-urlencoded')
+  .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
+    .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
+    .then(historicalHumidityData => {
+
+
+      if (historicalHumidityData.body) { res.status(200).send(historicalHumidityData.body); } else { res.status(200).send([]); }
+
+    })
+    .catch(err => {
+      console.log('Historical humidity sensor error: ', err);
+      res.status(403).send('Historical humidity sensor error');
+    });
+}
+
+/** 
  * This function will return water leak test result from Meraki sensor
  * @param {obj} req 
  * @param {obj} res 
@@ -461,6 +544,36 @@ async function getWaterLeakTest(req, res, next) {
       res.status(403).send('WaterLeak sensor error');
     });
 }
+
+/** 
+ * This function will get the historical waterLeak from Meraki sensor
+ * @param {obj} req 
+ * @param {obj} res 
+ * @param {function} next 
+ */
+ async function getHistoricalWaterLeakMeraki(req, res, next) {
+  var deviceSerial = req.query.deviceSerial;
+  var merakiNetworkID = req.query.merakiNetworkID;
+  var metric = req.query.metric;
+  var t0 = req.query.t0;
+  var t1 = req.query.t1;
+  var resolution  = req.query.resolution;
+  superagent.get(`https://api.meraki.com/api/v1/networks/${merakiNetworkID}/sensors/stats/historicalBySensor?metric=${metric}&serial=${deviceSerial}&t0=${t0}&t1=${t1}&resolution=${resolution}`)
+  .set('Content-Type', 'application/x-www-form-urlencoded')
+  .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
+    .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
+    .then(historicalWaterLeakData => {
+
+      // console.log('TempData', TempData.body.properties.value);
+      if (historicalWaterLeakData.body) { res.status(200).send(historicalWaterLeakData.body); } else { res.status(200).send([]); }
+
+    })
+    .catch(err => {
+      console.log('Historical waterLeak sensor error: ', err);
+      res.status(403).send('Historical waterLeak sensor error');
+    });
+}
+
 
 /** 
  * This function will return the historical door status from Meraki sensor
