@@ -1,6 +1,7 @@
 'use strict';
 
 var {mqttFunc}  = require('../mqtt');
+var helper  = require('../helper');
 const superagent = require('superagent');
 const express = require('express');
 const router = express.Router();
@@ -11,10 +12,13 @@ var modulecount = require('./lib/mpeg1muxer');
 var Stream = require('./lib/videoStream');
 const { json } = require('express');
 // Main routs
-// router.get('/loadRtspStream', loadRtspStream);
+router.get('/loadRtspStream', loadRtspStream);
 router.get('/recordedVideo', loadVideo);
 router.get('/recordList', recordList);
 router.get('/sensorsNumber', sensorsNumber);
+
+//Threshold
+router.get('/getSmokeThreshold', getSmokeThreshold);
 
 // Fibaro routs
 router.get('/getTemperatureFibaro/', getTemperatureFibaro);
@@ -41,6 +45,7 @@ router.get('/getHumidityMeraki', getHumidityMeraki);
 router.get('/getWaterLeakTest', getWaterLeakTest);
 router.get('/getDoorStatus', getDoorStatus);
 
+
 // Mqtt routs
 router.get('/runMqtt/', runMqtt);
 
@@ -57,6 +62,13 @@ const CAMERAPORT = process.env.CAMERAPORT;
 const MERAKI_API_KEY = process.env.MERAKI_API_KEY;
 const SENSORS_NUMBER = process.env.SENSORS_NUMBER;
 console.log(FIBARO_PASSWORD , FIBARO_USER_NAME )
+
+// Direct calls
+
+  //getSmokeThreshold();
+  loadRtspStream();
+
+
 // Functions definitions
 /** 
  * This function will run rtsp stream
@@ -124,7 +136,7 @@ async function loadRtspStream(req, res, next) {
   });
   res.send('IT WORK');
 }
-loadRtspStream();
+
 
 /** 
  * This function will get the temperature from Fibaro sensor
@@ -279,8 +291,41 @@ async function getCo2(req, res, next) {
   superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS}/api/devices/${co2DeviceID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
-    .then(co2Data => {
+    .then(async co2Data => {
+      superagent.get(`https://test.penguinin.com/cms_ahmad/Alerts/GetSmokeThresholds`)
+      .set('Content-Type', 'application/x-www-form-urlencoded')
+        .then(async smokeThreshold => {
+          var smokeThresholdBody = smokeThreshold.body
+          var parsThreshhold= smokeThresholdBody.thresholds;
+          if (smokeThresholdBody) { 
+            var threshold={};
+            if (smokeThresholdBody){
+      
+              var smokeThresholdThreshold=smokeThresholdBody.thresholds;
+              smokeThresholdThreshold.forEach((ele)=>{
+                if(ele.includes("+")){threshold.above=Number(ele[0])}
+                if(ele.includes("-")){threshold.below=Number(ele[0])}
+              })
+              if (threshold.above || threshold.below) {
+                if (threshold.above <co2Data.body.properties.value && co2Data.body.properties.value < threshold.below) { //Not used case
+                  console.log("alart above & below");
+                  await helper.sendSmokeAlert("upnormal Co2 level")
+                }
+                else if (threshold.above < co2Data.body.properties.value) {
+                  console.log("alart above");
+                  await helper.sendSmokeAlert("High Co2 level")
+                }
+                else if(co2Data.body.properties.value < threshold.below){
+                  console.log("alart below");
+                  await helper.sendSmokeAlert("Low Co2 level")
+                }
+              }
+      
+            }
 
+          }   
+        })
+      
       // console.log('co2Data', co2Data.body.properties.value);
       if (co2Data.body.properties.value) { res.status(200).send(co2Data.body.properties.value); } else { res.status(200).send([]); }
 
@@ -598,11 +643,35 @@ async function getDoorStatus(req, res, next) {
     });
 }
 
+/** 
+ * This function will get the SmokeAlertThreshold sensor
+ * @param {obj} req 
+ * @param {obj} res 
+ * @param {function} next 
+ */
+ async function getSmokeThreshold() {
+
+  superagent.get(`https://test.penguinin.com/cms_ahmad/Alerts/GetSmokeThresholds`)
+  .set('Content-Type', 'application/x-www-form-urlencoded')
+    .then(smokeThreshold => {
+      var body = smokeThreshold.body
+      var parsThreshhold= body.thresholds;
+      if (smokeThreshold.body) { 
+ 
+        return smokeThreshold.body; } else { console.log("Smoke threshold error")}
+
+    })
+    .catch(err => {
+      console.log('Smoke threshold error: ', err);
+      return 'Smoke threshold error';
+    });
+}
+
 
 /** 
  * This function will open the door from Akuvox sensor
  * @param {obj} req 
- * @param {obj} res 
+ * @param {obj} res threshold
  * @param {function} next 
  */
 async function openDoor(req, res, next) {
