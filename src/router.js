@@ -17,7 +17,7 @@ router.get('/recordedVideo', loadVideo);
 router.get('/recordList', recordList);
 router.get('/sensorsNumber', sensorsNumber);
 
-//Threshold
+// Threshold
 router.get('/getSmokeThreshold', getSmokeThreshold);
 
 // Fibaro routs
@@ -25,11 +25,11 @@ router.get('/getTemperatureFibaro/', getTemperatureFibaro);
 router.get('/getHistoricalTemperatureFibaro/', getHistoricalTemperatureFibaro);
 router.get('/getHistoricalDustFibaro/', getHistoricalDustFibaro);
 router.get('/getHistoricalCo2Fibaro/', getHistoricalCo2Fibaro);
+router.get('/getHistoricalPowerConsumption/', getHistoricalPowerConsumption);
 router.get('/getHumidityFibaro/', getHumidityFibaro);
 router.get('/getSmoke/', getSmoke);
 router.get('/getDust/', getDust);
 router.get('/getCo2/', getCo2);
-router.get('/getPowerConsumption/', getPowerConsumption);
 router.get('/checkSwitchStatus/', checkSwitchStatus);
 router.get('/postPowerSwitch/', postPowerSwitch);
 
@@ -367,10 +367,11 @@ async function getCo2(req, res, next) {
  * @param {obj} res 
  * @param {function} next 
  */
-async function getPowerConsumption(req, res, next) {
+async function getHistoricalPowerConsumption(req, res, next) {
   var powerDeviceID = req.query.deviceID;
-  var dateDiff = req.query.dateDiff;
-  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS}/api/energy/now-100000/now/summary-graph/devices/energy/${powerDeviceID}`)
+  var t0 = req.query.t0;
+  var t1 = req.query.t1;
+  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS}/api/energy/${t1}-${t0}/now/summary-graph/devices/energy/${powerDeviceID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
     .then(powerData => {
