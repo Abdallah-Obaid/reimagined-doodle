@@ -1,6 +1,6 @@
 'use strict';
 
-var {mqttFunc}  = require('../mqtt');
+var MqttTester  = require('../mqtt');
 var helper  = require('../helper');
 const superagent = require('superagent');
 const express = require('express');
@@ -11,39 +11,41 @@ const path = require('path');// to remove .mp4 from file name
 var modulecount = require('./lib/mpeg1muxer');
 var Stream = require('./lib/videoStream');
 const { json } = require('express');
+const { error } = require('console');
 // Main routs
-router.get('/loadRtspStream', loadRtspStream);
-router.get('/recordedVideo', loadVideo);
-router.get('/recordList', recordList);
-router.get('/sensorsNumber', sensorsNumber);
+// router.get('/loadRtspStream', loadRtspStream);
+// router.get('/recordedVideo', loadVideo);
+// router.get('/recordList', recordList);
+// router.get('/sensorsNumber', sensorsNumber);
 
 // Threshold
-router.get('/getSmokeThreshold', getSmokeThreshold);
+// router.get('/getSmokeThreshold', getSmokeThreshold);
 
 // Fibaro routs
-router.get('/getTemperatureFibaro/', getTemperatureFibaro);
-router.get('/getHistoricalTemperatureFibaro/', getHistoricalTemperatureFibaro);
-router.get('/getHistoricalDustFibaro/', getHistoricalDustFibaro);
-router.get('/getHistoricalCo2Fibaro/', getHistoricalCo2Fibaro);
-router.get('/getHistoricalPowerConsumption/', getHistoricalPowerConsumption);
-router.get('/getHumidityFibaro/', getHumidityFibaro);
-router.get('/getSmoke/', getSmoke);
-router.get('/getDust/', getDust);
-router.get('/getCo2/', getCo2);
-router.get('/checkSwitchStatus/', checkSwitchStatus);
-router.get('/postPowerSwitch/', postPowerSwitch);
+// router.get('/getTemperatureFibaro/', getTemperatureFibaro);
+// router.get('/getHistoricalTemperatureFibaro/', getHistoricalTemperatureFibaro);
+// router.get('/getHistoricalDustFibaro/', getHistoricalDustFibaro);
+// router.get('/getHistoricalCo2Fibaro/', getHistoricalCo2Fibaro);
+// router.get('/getHistoricalPowerConsumption/', getHistoricalPowerConsumption);
+// router.get('/getHumidityFibaro/', getHumidityFibaro);
+// router.get('/getSmoke/', getSmoke);
+// router.get('/getDust/', getDust);
+// router.get('/getCo2/', getCo2);
+// router.get('/checkSwitchStatus/', checkSwitchStatus);
+// router.get('/postPowerSwitch/', postPowerSwitch);
 
 // Akuvox routs
-router.get('/openDoorSwitch/', openDoorSwitch);
+// router.get('/openDoorSwitch/', openDoorSwitch);
 
 // Meraki routs
-router.get('/getTemperatureMeraki/', getTemperatureMeraki);
-router.get('/getHistoricalTemperatureMeraki/', getHistoricalTemperatureMeraki);
-router.get('/getHistoricalHumidityMeraki/', getHistoricalHumidityMeraki);
-router.get('/getHistoricalWaterLeakMeraki/', getHistoricalWaterLeakMeraki);
-router.get('/getHumidityMeraki', getHumidityMeraki);
-router.get('/getWaterLeakTest', getWaterLeakTest);
-router.get('/getDoorStatus', getDoorStatus);
+// router.get('/getTemperatureMeraki/', getTemperatureMeraki);
+// router.get('/getHistoricalTemperatureMeraki/', getHistoricalTemperatureMeraki);
+// router.get('/getHistoricalHumidityMeraki/', getHistoricalHumidityMeraki);
+// router.get('/getHistoricalWaterLeakMeraki/', getHistoricalWaterLeakMeraki);
+// router.get('/getHumidityMeraki', getHumidityMeraki);
+// router.get('/getWaterLeakTest', getWaterLeakTest);
+// router.get('/getDoorStatus', getDoorStatus);
+router.get('/getSoundAlarm',getSoundAlarm)
 
 
 // Mqtt routs
@@ -66,8 +68,11 @@ console.log(FIBARO_PASSWORD , FIBARO_USER_NAME )
 // Direct calls
 
   //getSmokeThreshold();
-  loadRtspStream();
+  // loadRtspStream();
+  runMqtt()
 
+// Global Vars
+var soundAlarm = false;
 
 // Functions definitions
 /** 
@@ -693,6 +698,26 @@ async function openDoor(req, res, next) {
 }
 
 /** 
+ * This function will get sound alarm from Meraki
+ * @param {obj} req 
+ * @param {obj} res 
+ * @param {function} next 
+ */
+async function getSoundAlarm(req, res, next) {
+  try {
+    console.log(MqttTester.soundAlarm)
+    if (MqttTester.soundAlarm == 'noFire') {
+      res.status(200).send(MqttTester.soundAlarm);
+    } else if (MqttTester.soundAlarm == 'fireAlarm') {
+      res.status(200).send(MqttTester.soundAlarm);
+    }
+  } catch {
+    res.status(404).send(error);
+  }
+
+}
+
+/** 
 * This function will load the recorded video by name
 * @param {obj} req 
 * @param {obj} res 
@@ -778,9 +803,10 @@ function sensorsNumber(req, res, next) {
  * @param {function} next 
  */
 function runMqtt(){
-  var topic  =  '/merakimv/Q2PV-NCFZ-QY79/raw_detections';
-  var hostIP = 'mqtt://test.mosquitto.org';
-  var clientId = 'PenguinIn';
-  mqttFunc(topic,hostIP,clientId);
+  var topic  =  '/merakimv/Q2PV-NCFZ-QY79/raw_detections'; //  /merakimv/Q2PV-NCFZ-QY79/audio_detections  /merakimv/Q2PV-NCFZ-QY79/raw_detections
+  var hostIP = 'mqtt://test.mosquitto.org'; // mqtt://test.mosquitto.org
+  var clientId = 'PenguinIn';  // PenguinIn
+  MqttTester.mqttFunc(topic,hostIP,clientId);
 }
+
 module.exports = router;
