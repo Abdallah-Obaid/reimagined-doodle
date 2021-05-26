@@ -6,51 +6,50 @@ var MqttTester={};
 var soundAlarm = 'noFire';
 MqttTester.soundAlarm=soundAlarm;
 var mqttFunc = function (topic,hostIP,port,clientId){
-var topic =  topic;
-var options = {
-  port: port,
-  host: hostIP,
-  clientId: clientId,
+  var topic =  topic;
+  var options = {
+    port: port,
+    clientId: clientId,
+
+  };
+  var client  = mqtt.connect(hostIP,port,options);
+  client.on('connect',function(){	
+    console.log('connected');
+    client.subscribe(topic,{qos:1});
+    client.on('message',function(topic, message, packet){
+    // console.log("message",message)
+      var jsonArr=JSON.parse(message);
+      console.log('jsonArr',jsonArr);
+      //  if (jsonArr.class == "fireAlarm"){
+      //   if(jsonArr.objects){
+      //     if (jsonArr.objects[0]) {
+      //     if (jsonArr.objects[0].type == "person"){
+      //       // console.log("fireAlarm")
+      //       soundAlarm = 'fireAlarm';
+      //       MqttTester.soundAlarm=soundAlarm;
+      //   }
+      // }
+      if(jsonArr){
+
+        if (jsonArr.class == 'fireAlarm'){
+        // console.log("fireAlarm")
+          soundAlarm = 'fireAlarm';
+          MqttTester.soundAlarm=soundAlarm;
+        }
+      }else{
+      // console.log("noFire")
+        soundAlarm = 'noFire';
+        MqttTester.soundAlarm=soundAlarm;
+      }
+
+
+
+    });
+    client.on('error',function(error){ console.log('Can\'t connect'+error);});
+  // client.end();
+  });
 
 };
-var client  = mqtt.connect(hostIP,port,options);
-client.on('connect',function(){	
-  console.log('connected');
-  client.subscribe(topic,{qos:1});
-  client.on('message',function(topic, message, packet){
-    // console.log("message",message)
-    var jsonArr=JSON.parse(message);
-    console.log("jsonArr",jsonArr)
-    //  if (jsonArr.class == "fireAlarm"){
-    //   if(jsonArr.objects){
-    //     if (jsonArr.objects[0]) {
-    //     if (jsonArr.objects[0].type == "person"){
-    //       // console.log("fireAlarm")
-    //       soundAlarm = 'fireAlarm';
-    //       MqttTester.soundAlarm=soundAlarm;
-    //   }
-    // }
-    if(jsonArr){
-
-      if (jsonArr.class == "fireAlarm"){
-        // console.log("fireAlarm")
-        soundAlarm = 'fireAlarm';
-        MqttTester.soundAlarm=soundAlarm;
-    }
-     }else{
-      // console.log("noFire")
-      soundAlarm = 'noFire';
-      MqttTester.soundAlarm=soundAlarm;
-     }
-
-
-
-  });
-  client.on('error',function(error){ console.log('Can\'t connect'+error);});
-  // client.end();
-});
-
-}
 
 // { objects:
 //   [ { confidence: 53,

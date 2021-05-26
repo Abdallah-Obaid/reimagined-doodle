@@ -803,10 +803,16 @@ function sensorsNumber(req, res, next) {
  * @param {function} next 
  */
 function runMqtt(){
-  var topic  =  '/merakimv/Q2PV-NCFZ-QY79/raw_detections'; //  /merakimv/Q2PV-NCFZ-QY79/audio_detections  /merakimv/Q2PV-NCFZ-QY79/raw_detections
-  var hostIP = 'mqtt://test.mosquitto.org'; // mqtt://test.mosquitto.org
+  // var topic  =  '/merakimv/Q2PV-NCFZ-QY79/raw_detections'; //  /merakimv/Q2PV-NCFZ-QY79/audio_detections  /merakimv/Q2PV-NCFZ-QY79/raw_detections
+  // var hostIP = 'mqtt://test.mosquitto.org'; // mqtt://test.mosquitto.org
+  // var clientId = 'PenguinIn';  // PenguinIn
+  // MqttTester.mqttFunc(topic,hostIP,clientId);
+
+  var topic  =  'obaid'; //  /merakimv/Q2PV-NCFZ-QY79/audio_detections  /merakimv/Q2PV-NCFZ-QY79/raw_detections
+  var hostIP = 'mqtt://20.36.27.184'; // mqtt://test.mosquitto.org
+  var port = '1883';
   var clientId = 'PenguinIn';  // PenguinIn
-  MqttTester.mqttFunc(topic,hostIP,clientId);
+  MqttTester.mqttFunc(topic,hostIP,port,clientId);
 }
 
 module.exports = router;
