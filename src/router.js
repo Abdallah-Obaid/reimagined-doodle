@@ -81,7 +81,7 @@ async function loadRtspStream(req, res, next) {
   var recordDuration = 120; //in sec
   var stream = await new Stream({
     name: 'name',
-    streamUrl: `rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov`,//`rtsp://${CAMERAIP}:${CAMERAPORT}/live`,//'rtsp://192.168.128.2:9000/live'
+    streamUrl: `rtsp://${CAMERAIP}:${CAMERAPORT}/live`,//`rtsp://${CAMERAIP}:${CAMERAPORT}/live`,//'rtsp://192.168.128.2:9000/live'
     wsPort: 9999,
     ffmpegOptions: { // options ffmpeg flags
 
@@ -240,9 +240,9 @@ async function getSmoke(req, res, next) {
  */
 async function getDust(req, res, next) {
   var dustDeviceID = req.query.deviceID;
-  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS}/api/devices/${dustDeviceID}`)
+  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices/${dustDeviceID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
-    .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
+    .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
     .then(dustData => {
 
       // console.log('dustData', dustData.body.properties.value);
@@ -265,9 +265,9 @@ async function getDust(req, res, next) {
   var dustDeviceID = req.query.deviceID;
   var t0 = req.query.t0;
   var t1 = req.query.t1;
-  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS}/api/energy/${t1}-${t0}/now/summary-graph/devices/energy/${dustDeviceID}`)
+  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/energy/${t1}-${t0}/now/summary-graph/devices/energy/${dustDeviceID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
-    .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
+    .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
     .then(dustData => {
 
       // console.log('powerData', powerData.body);
@@ -288,9 +288,9 @@ async function getDust(req, res, next) {
  */
 async function getCo2(req, res, next) {
   var co2DeviceID = req.query.deviceID;
-  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS}/api/devices/${co2DeviceID}`)
+  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices/${co2DeviceID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
-    .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
+    .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
     .then(async co2Data => {
       superagent.get(`https://test.penguinin.com/cms_ahmad/Alerts/GetSmokeThresholds`)
       .set('Content-Type', 'application/x-www-form-urlencoded')
@@ -346,9 +346,9 @@ async function getCo2(req, res, next) {
   var co2DeviceID = req.query.deviceID;
   var t0 = req.query.t0;
   var t1 = req.query.t1;
-  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS}/api/energy/${t1}-${t0}/now/summary-graph/devices/energy/${co2DeviceID}`)
+  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/energy/${t1}-${t0}/now/summary-graph/devices/energy/${co2DeviceID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
-    .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
+    .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
     .then(co2Data => {
 
       // console.log('powerData', powerData.body);
@@ -373,7 +373,7 @@ async function getHistoricalPowerConsumption(req, res, next) {
   var t1 = req.query.t1;
   superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS}/api/energy/${t1}-${t0}/now/summary-graph/devices/energy/${powerDeviceID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
-    .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
+    .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
     .then(powerData => {
 
       // console.log('powerData', powerData.body);
@@ -629,8 +629,9 @@ async function getWaterLeakTest(req, res, next) {
  */
 async function getDoorStatus(req, res, next) {
   var deviceSerial = req.query.deviceSerial;
+  var eventName = req.query.eventName;
   var merakiNetworkID = req.query.merakiNetworkID;
-  superagent.get(`https://api.meraki.com/api/v1/networks/${merakiNetworkID}/environmental/events?sensorSerial=${deviceSerial}`)
+  superagent.get(`https://api.meraki.com/api/v1/networks/${merakiNetworkID}/environmental/events?includedEventTypes[]=${eventName}&sensorSerial=${deviceSerial}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
     .then(doorStatusData => {
