@@ -5,6 +5,7 @@ var mqtt  = require('mqtt');
 var MqttTester={};
 var soundAlarm = 'noFire';
 var switchOff = 30000; // 30sec
+var allowedTimeSecDiff = 10;
 MqttTester.soundAlarm=soundAlarm;
 var mqttFunc = function (topic,hostIP,port,clientId){
   var topic =  topic;
@@ -31,13 +32,16 @@ var mqttFunc = function (topic,hostIP,port,clientId){
       //   }
       // }
       if(jsonArr){
-
-        if (jsonArr.class == 'fireAlarm'){
+        var dateNowSec = Math.floor(new Date().getTime() / 1000);
+        var timeDiff = dateNowSec-Math.floor(new Date(jsonArr.ts).getTime()/1000);
+        if (jsonArr.class == 'fireAlarm' && (timeDiff <= allowedTimeSecDiff) ){
         // console.log("fireAlarm")
           soundAlarm = 'fireAlarm';
+          console.log(soundAlarm);
           MqttTester.soundAlarm=soundAlarm;
           setTimeout(()=>{
             soundAlarm = 'noFire'; 
+            console.log(soundAlarm);
             MqttTester.soundAlarm=soundAlarm;        
           },switchOff);
         }
