@@ -4,6 +4,7 @@ var mqtt  = require('mqtt');
 // Global vars
 var MqttTester={};
 var soundAlarm = 'noFire';
+var switchOff = 30000; // 30sec
 MqttTester.soundAlarm=soundAlarm;
 var mqttFunc = function (topic,hostIP,port,clientId){
   var topic =  topic;
@@ -35,6 +36,10 @@ var mqttFunc = function (topic,hostIP,port,clientId){
         // console.log("fireAlarm")
           soundAlarm = 'fireAlarm';
           MqttTester.soundAlarm=soundAlarm;
+          setTimeout(()=>{
+            soundAlarm = 'noFire'; 
+            MqttTester.soundAlarm=soundAlarm;        
+          },switchOff);
         }
       }else{
       // console.log("noFire")
