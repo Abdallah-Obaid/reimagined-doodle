@@ -33,15 +33,16 @@ var mqttFunc = function (topic,hostIP,port,clientId){
       // }
       if(jsonArr){
         var dateNowSec = Math.floor(new Date().getTime() / 1000);
-        var timeDiff = dateNowSec-Math.floor(new Date(jsonArr.ts).getTime()/1000);
+        var timeDiff = dateNowSec-Math.floor(jsonArr.ts);
+        // console.log(timeDiff);
         if (jsonArr.class == 'fireAlarm' && (timeDiff <= allowedTimeSecDiff) ){
         // console.log("fireAlarm")
           soundAlarm = 'fireAlarm';
-          console.log(soundAlarm);
+          // console.log(soundAlarm);
           MqttTester.soundAlarm=soundAlarm;
           setTimeout(()=>{
             soundAlarm = 'noFire'; 
-            console.log(soundAlarm);
+            // console.log(soundAlarm);
             MqttTester.soundAlarm=soundAlarm;        
           },switchOff);
         }
