@@ -13,38 +13,38 @@ var Stream = require('./lib/videoStream');
 const { json } = require('express');
 const { error } = require('console');
 // Main routs
-// router.get('/loadRtspStream', loadRtspStream);
-// router.get('/recordedVideo', loadVideo);
-// router.get('/recordList', recordList);
-// router.get('/sensorsNumber', sensorsNumber);
+router.get('/loadRtspStream', loadRtspStream);
+router.get('/recordedVideo', loadVideo);
+router.get('/recordList', recordList);
+router.get('/sensorsNumber', sensorsNumber);
 
 // Threshold
-// router.get('/getSmokeThreshold', getSmokeThreshold);
+router.get('/getSmokeThreshold', getSmokeThreshold);
 
 // Fibaro routs
-// router.get('/getTemperatureFibaro/', getTemperatureFibaro);
-// router.get('/getHistoricalTemperatureFibaro/', getHistoricalTemperatureFibaro);
-// router.get('/getHistoricalDustFibaro/', getHistoricalDustFibaro);
-// router.get('/getHistoricalCo2Fibaro/', getHistoricalCo2Fibaro);
-// router.get('/getHistoricalPowerConsumption/', getHistoricalPowerConsumption);
-// router.get('/getHumidityFibaro/', getHumidityFibaro);
-// router.get('/getSmoke/', getSmoke);
-// router.get('/getDust/', getDust);
-// router.get('/getCo2/', getCo2);
-// router.get('/checkSwitchStatus/', checkSwitchStatus);
-// router.get('/postPowerSwitch/', postPowerSwitch);
+router.get('/getTemperatureFibaro/', getTemperatureFibaro);
+router.get('/getHistoricalTemperatureFibaro/', getHistoricalTemperatureFibaro);
+router.get('/getHistoricalDustFibaro/', getHistoricalDustFibaro);
+router.get('/getHistoricalCo2Fibaro/', getHistoricalCo2Fibaro);
+router.get('/getHistoricalPowerConsumption/', getHistoricalPowerConsumption);
+router.get('/getHumidityFibaro/', getHumidityFibaro);
+router.get('/getSmoke/', getSmoke);
+router.get('/getDust/', getDust);
+router.get('/getCo2/', getCo2);
+router.get('/checkSwitchStatus/', checkSwitchStatus);
+router.get('/postPowerSwitch/', postPowerSwitch);
 
 // Akuvox routs
-// router.get('/openDoorSwitch/', openDoorSwitch);
+router.get('/openDoorSwitch/', openDoorSwitch);
 
 // Meraki routs
-// router.get('/getTemperatureMeraki/', getTemperatureMeraki);
-// router.get('/getHistoricalTemperatureMeraki/', getHistoricalTemperatureMeraki);
-// router.get('/getHistoricalHumidityMeraki/', getHistoricalHumidityMeraki);
-// router.get('/getHistoricalWaterLeakMeraki/', getHistoricalWaterLeakMeraki);
-// router.get('/getHumidityMeraki', getHumidityMeraki);
-// router.get('/getWaterLeakTest', getWaterLeakTest);
-// router.get('/getDoorStatus', getDoorStatus);
+router.get('/getTemperatureMeraki/', getTemperatureMeraki);
+router.get('/getHistoricalTemperatureMeraki/', getHistoricalTemperatureMeraki);
+router.get('/getHistoricalHumidityMeraki/', getHistoricalHumidityMeraki);
+router.get('/getHistoricalWaterLeakMeraki/', getHistoricalWaterLeakMeraki);
+router.get('/getHumidityMeraki', getHumidityMeraki);
+router.get('/getWaterLeakTest', getWaterLeakTest);
+router.get('/getDoorStatus', getDoorStatus);
 router.get('/getSoundAlarm',getSoundAlarm)
 
 
@@ -68,7 +68,7 @@ console.log(FIBARO_PASSWORD , FIBARO_USER_NAME )
 // Direct calls
 
   //getSmokeThreshold();
-  // loadRtspStream();
+  loadRtspStream();
   runMqtt()
 
 // Global Vars
