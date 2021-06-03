@@ -1,65 +1,65 @@
 'use strict';
 
-var thresholdsEnum={};
+var ThresholdsEnum={};
 var temperature={
   normal: 1,
   high: 2,
   low:3,
 };
-thresholdsEnum.temperature;
+ThresholdsEnum.temperature=temperature;
 
 var humidity={
   normal: 1,
   high: 2,
   low:3,
 };
-thresholdsEnum.humidity;
+ThresholdsEnum.humidity=humidity;
 
 var dust={
   normal: 1,
   moderate: 2,
   unhealthy:3,
 };
-thresholdsEnum.dust;
+ThresholdsEnum.dust=dust;
 
 var co2={
   normal: 1,
   high: 2,
   low:3,
 };
-thresholdsEnum.co2;
+ThresholdsEnum.co2=co2;
 
 var waterLeak = {
   normal : 1,
   leak:2,
 };
-thresholdsEnum.waterLeak;
+ThresholdsEnum.waterLeak=waterLeak;
 
 var doorStatus = {
   open : 1,
   locked:2,
 };
-thresholdsEnum.doorStatus;
+ThresholdsEnum.doorStatus=doorStatus;
 
 var smokeAlarm = {
   normal : 1,
   fire:2,
 };
-thresholdsEnum.smokeAlarm;
+ThresholdsEnum.smokeAlarm=smokeAlarm;
 
 var soundAlarm = {
   normal : 1,
   fire:2,
 };
-thresholdsEnum.soundAlarm;
+ThresholdsEnum.soundAlarm=soundAlarm;
 
 var lightsControl = {
   On : 1,
   Off:2,
 };
-thresholdsEnum.lightsControl;
+ThresholdsEnum.lightsControl=lightsControl;
 
-module.exports = thresholdsEnum;
+module.exports = ThresholdsEnum;
 
 // # Thresholds:
 
