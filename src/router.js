@@ -68,8 +68,8 @@ console.log(FIBARO_PASSWORD , FIBARO_USER_NAME )
 // Direct calls
 
   //getSmokeThreshold();
-  //loadRtspStream();
-  runMqtt()
+  loadRtspStream();
+  runMqtt();
 
 // Global Vars
 var soundAlarm = false;
