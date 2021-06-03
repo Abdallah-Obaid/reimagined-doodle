@@ -12,6 +12,7 @@ var modulecount = require('./lib/mpeg1muxer');
 var Stream = require('./lib/videoStream');
 const { json } = require('express');
 const { error } = require('console');
+const thresholdsEnum = require('../src/enum/thresholdsEnum')
 // Main routs
 router.get('/loadRtspStream', loadRtspStream);
 router.get('/recordedVideo', loadVideo);
@@ -227,10 +228,17 @@ async function getSmoke(req, res, next) {
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
     .then(smokeData => {
-
+      var smokeObject = {};
+      var smokeDatavalue = smokeData.body.properties.value;
+      if (smokeDatavalue) {
+      if (smokeDatavalue == 'true') {
+        smokeObject.Status=thresholdsEnum.smokeAlarm.fire;
+      }else{
+        smokeObject.Status=thresholdsEnum.smokeAlarm.normal;
+      }
+      smokeObject.value=smokeDatavalue;
       // console.log('smokeData', smokeData.body.properties.value);
-      if (smokeData.body.properties.value) { res.status(200).send(smokeData.body.properties.value); } else { res.status(200).send([]); }
-
+       res.status(200).send(smokeObject); } else { res.status(200).send([]); }
     })
     .catch(err => {
       console.log('Smoke sensor error: ', err);
@@ -250,9 +258,21 @@ async function getDust(req, res, next) {
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
     .then(dustData => {
-
+      var dustObject = {};
+      var dustDatavalue = dustData.body.properties.value;
+      if (dustDatavalue) {
+      if (50 >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
+        dustObject.Status=thresholdsEnum.dust.normal;
+      }
+      if (50 < Number(dustDatavalue) && Number(dustDatavalue) <= 100) {
+        dustObject.Status=thresholdsEnum.dust.moderate;
+      }
+      if (Number(dustDatavalue) > 100) {
+        dustObject.Status=thresholdsEnum.dust.unhealthy;
+      }
+      dustObject.value=dustDatavalue;
       // console.log('dustData', dustData.body.properties.value);
-      if (dustData.body.properties.value) { res.status(200).send(dustData.body.properties.value); } else { res.status(200).send([]); }
+       res.status(200).send(dustObject); } else { res.status(200).send([]); }
 
     })
     .catch(err => {
@@ -298,42 +318,21 @@ async function getCo2(req, res, next) {
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
     .then(async co2Data => {
-      superagent.get(`https://test.penguinin.com/cms_ahmad/Alerts/GetSmokeThresholds`)
-      .set('Content-Type', 'application/x-www-form-urlencoded')
-        .then(async smokeThreshold => {
-          var smokeThresholdBody = smokeThreshold.body
-          var parsThreshhold= smokeThresholdBody.thresholds;
-          if (smokeThresholdBody) { 
-            var threshold={};
-            if (smokeThresholdBody){
-      
-              var smokeThresholdThreshold=smokeThresholdBody.thresholds;
-              smokeThresholdThreshold.forEach((ele)=>{
-                if(ele.includes("+")){threshold.above=Number(ele[0])}
-                if(ele.includes("-")){threshold.below=Number(ele[0])}
-              })
-              if (threshold.above || threshold.below) {
-                if (threshold.above <co2Data.body.properties.value && co2Data.body.properties.value < threshold.below) { //Not used case
-                  console.log("alart above & below");
-                  await helper.sendSmokeAlert("upnormal Co2 level")
-                }
-                else if (threshold.above < co2Data.body.properties.value) {
-                  console.log("alart above");
-                  await helper.sendSmokeAlert("High Co2 level")
-                }
-                else if(co2Data.body.properties.value < threshold.below){
-                  console.log("alart below");
-                  await helper.sendSmokeAlert("Low Co2 level")
-                }
-              }
-      
-            }
-
-          }   
-        })
-      
+      var co2Object = {};
+      var co2Datavalue = co2Data.body.properties.value;
+      if (co2Datavalue) {
+      if (1000 >= Number(co2Datavalue) && Number(co2Datavalue) >= 400) {
+        co2Object.Status=thresholdsEnum.co2.normal;
+      }
+      if (1000 < Number(co2Datavalue)) {
+        co2Object.Status=thresholdsEnum.co2.high;
+      }
+      if (Number(co2Datavalue) < 400) {
+        co2Object.Status=thresholdsEnum.co2.low;
+      }
+      co2Object.value=co2Datavalue;
       // console.log('co2Data', co2Data.body.properties.value);
-      if (co2Data.body.properties.value) { res.status(200).send(co2Data.body.properties.value); } else { res.status(200).send([]); }
+       res.status(200).send(co2Object); } else { res.status(200).send([]); }
 
     })
     .catch(err => {
@@ -502,10 +501,21 @@ async function getTemperatureMeraki(req, res, next) {
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
     .then(temperatureData => {
-      // console.log('temperatureData', temperatureData.body);
-
-      if (temperatureData.body[0]) { res.status(200).send(temperatureData.body[0]); } else { res.status(200).send([]); }
-
+      var temperatureObject = {};
+      var temperatureDatavalue = temperatureData.body[0].value;
+      if (temperatureDatavalue) {
+      if (27 >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= 20) {
+        temperatureObject.Status=thresholdsEnum.temperature.normal;
+      }
+      if (27 < Number(temperatureDatavalue)) {
+        temperatureObject.Status=thresholdsEnum.temperature.high;
+      }
+      if (Number(temperatureDatavalue) < 20) {
+        temperatureObject.Status=thresholdsEnum.temperature.low;
+      }
+      temperatureObject.value=temperatureDatavalue;
+      // console.log('temperatureData', temperatureData.body.properties.value);
+       res.status(200).send(temperatureObject); } else { res.status(200).send([]); }
     })
     .catch(err => {
       console.log('Temperature sensor error: ', err);
@@ -557,9 +567,21 @@ async function getHumidityMeraki(req, res, next) {
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
     .then(humidityData => {
-      // console.log('humidityData', humidityData.body);
-      if (humidityData.body[0]) { res.status(200).send(humidityData.body[0]); } else { res.status(200).send([]); }
-
+      var humidityObject = {};
+      var humidityDatavalue = humidityData.body[0].value;
+      if (humidityDatavalue) {
+      if (50 >= Number(humidityDatavalue) && Number(humidityDatavalue) >= 30) {
+        humidityObject.Status=thresholdsEnum.humidity.normal;
+      }
+      if (50 < Number(humidityDatavalue)) {
+        humidityObject.Status=thresholdsEnum.humidity.high;
+      }
+      if (Number(humidityDatavalue) < 30) {
+        humidityObject.Status=thresholdsEnum.humidity.low;
+      }
+      humidityObject.value=humidityDatavalue;
+      // console.log('humidityData', humidityData.body.properties.value);
+       res.status(200).send(humidityObject); } else { res.status(200).send([]); }
     })
     .catch(err => {
       console.log('Humidity sensor error: ', err);
@@ -611,10 +633,17 @@ async function getWaterLeakTest(req, res, next) {
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
     .then(waterLeakData => {
-      // console.log('waterLeakData', waterLeakData.body);
-      //if (waterLeakData.body[0].eventData) { res.status(200).send(waterLeakData.body[0].eventData.value); } else { res.status(200).send([]); }
-      if (waterLeakData.body[0]) { res.status(200).send(waterLeakData.body[0]); } else { res.status(200).send([]); }
-
+      var waterLeakObject = {};
+      var waterLeakDatavalue = waterLeakData.body[0].value;
+      if (waterLeakDatavalue) {
+      if (Number(waterLeakDatavalue) == 0) {
+        waterLeakObject.Status=thresholdsEnum.waterLeak.normal;
+      }else{
+        waterLeakObject.Status=thresholdsEnum.waterLeak.leak;
+      }
+      waterLeakObject.value=waterLeakDatavalue;
+      // console.log('waterLeakData', waterLeakData.body.properties.value);
+       res.status(200).send(waterLeakObject); } else { res.status(200).send([]); }
     })
     .catch(err => {
       console.log('WaterLeak sensor error: ', err);
@@ -666,9 +695,17 @@ async function getDoorStatus(req, res, next) {
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
     .then(doorStatusData => {
-      // console.log('doorStatusData', doorStatusData.body);
-      if (doorStatusData.body) { res.status(200).send(doorStatusData.body); } else { res.status(200).send([]); }
-
+      var doorStatusObject = {};
+      var doorStatusDatavalue = doorStatusData.body[0].value;
+      if (doorStatusDatavalue) {
+      if (Number(doorStatusDatavalue) == 0) {
+        doorStatusObject.Status=thresholdsEnum.doorStatus.open;
+      }else{
+        doorStatusObject.Status=thresholdsEnum.doorStatus.locked;
+      }
+      doorStatusObject.value=doorStatusDatavalue;
+      // console.log('doorStatusData', doorStatusData.body.properties.value);
+       res.status(200).send(doorStatusObject); } else { res.status(200).send([]); }
     })
     .catch(err => {
       console.log('Door Status sensor error: ', err);
