@@ -27,6 +27,7 @@ router.get('/getHistoricalTemperatureFibaro/', getHistoricalTemperatureFibaro);
 router.get('/getHistoricalDustFibaro/', getHistoricalDustFibaro);
 router.get('/getHistoricalCo2Fibaro/', getHistoricalCo2Fibaro);
 router.get('/getHistoricalPowerConsumption/', getHistoricalPowerConsumption);
+router.get('/getPowerConsumption/', getPowerConsumption);
 router.get('/getHumidityFibaro/', getHumidityFibaro);
 router.get('/getSmoke/', getSmoke);
 router.get('/getDust/', getDust);
@@ -363,6 +364,31 @@ async function getCo2(req, res, next) {
     .catch(err => {
       console.log('Co2 sensor error: ', err);
       res.status(403).send('Co2 sensor error');
+    });
+}
+
+
+/** 
+ * This function will get the power consumption from Fibaro sensor
+ * @param {obj} req 
+ * @param {obj} res 
+ * @param {function} next 
+ */
+ async function getPowerConsumption(req, res, next) {
+  var powerDeviceID = req.query.deviceID;
+  // var powerDeviceID = 59;
+  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices/${powerDeviceID}`)
+    .set('Content-Type', 'application/x-www-form-urlencoded')
+    .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
+    .then(powerData => {
+
+      // console.log('smokeData', smokeData.body.properties.value);
+      if (powerData.body.properties.value) { res.status(200).send(powerData.body.properties.value); } else { res.status(200).send([]); }
+
+    })
+    .catch(err => {
+      console.log('Power sensor error: ', err);
+      res.status(403).send('Power sensor error');
     });
 }
 
