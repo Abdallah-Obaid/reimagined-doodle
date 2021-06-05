@@ -2,6 +2,7 @@
 
 var MqttTester  = require('../mqtt');
 var DynamicAlerts  = require('../src/dynamicAlerts/dynamicAlerts');
+var HistoricalData  = require('../src/historicalData/historicalData');
 var helper  = require('../helper');
 const superagent = require('superagent');
 const express = require('express');
@@ -74,6 +75,7 @@ console.log(FIBARO_PASSWORD , FIBARO_USER_NAME )
   //loadRtspStream();
   runMqtt();
   //DynamicAlerts.initialeAlertService();
+  //HistoricalData.initialeHistoricalDataService();
 
 // Global Vars
 var soundAlarm = false;
