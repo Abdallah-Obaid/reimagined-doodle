@@ -1,5 +1,8 @@
 'use strict';
 var mqtt  = require('mqtt');
+var alerts  = require('../src/dynamicAlerts/dynamicAlerts');
+const SensorTypeEnum = require('../src/enum/sensorTypeEnum');
+const SensorAlertSeverityEnum = require('../src/enum/sensorAlertSeverityEnum');
 
 // Global vars
 var MqttTester={};
@@ -40,6 +43,8 @@ var mqttFunc = function (topic,hostIP,port,clientId){
           soundAlarm = 'fireAlarm';
           // console.log(soundAlarm);
           MqttTester.soundAlarm=soundAlarm;
+          alerts.alertSender(SensorTypeEnum.sensorType.fire,'fireAlarm',SensorAlertSeverityEnum.alertSeverity.high,new Date());
+
           setTimeout(()=>{
             soundAlarm = 'noFire'; 
             // console.log(soundAlarm);

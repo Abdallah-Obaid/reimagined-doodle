@@ -18,7 +18,7 @@ ThresholdsEnum.humidity=humidity;
 var dust={
   normal: 1,
   moderate: 2,
-  unhealthy:3,
+  high:3,
 };
 ThresholdsEnum.dust=dust;
 
@@ -54,8 +54,8 @@ var soundAlarm = {
 ThresholdsEnum.soundAlarm=soundAlarm;
 
 var lightsControl = {
-  On : 1,
-  Off:2,
+  on : 1,
+  off:2,
 };
 ThresholdsEnum.lightsControl=lightsControl;
 

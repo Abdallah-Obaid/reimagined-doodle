@@ -1,6 +1,7 @@
 'use strict';
 
 var MqttTester  = require('../mqtt');
+var DynamicAlerts  = require('../src/dynamicAlerts/dynamicAlerts');
 var helper  = require('../helper');
 const superagent = require('superagent');
 const express = require('express');
@@ -72,6 +73,7 @@ console.log(FIBARO_PASSWORD , FIBARO_USER_NAME )
   //getSmokeThreshold();
   //loadRtspStream();
   runMqtt();
+  //DynamicAlerts.initialeAlertService();
 
 // Global Vars
 var soundAlarm = false;
@@ -268,7 +270,7 @@ async function getDust(req, res, next) {
         dustObject.Status=ThresholdsEnum.dust.moderate;
       }
       if (Number(dustDatavalue) > 100) {
-        dustObject.Status=ThresholdsEnum.dust.unhealthy;
+        dustObject.Status=ThresholdsEnum.dust.high;
       }
       dustObject.value=dustDatavalue;
       // console.log('dustData', dustData.body.properties.value);
@@ -503,7 +505,7 @@ async function getTemperatureMeraki(req, res, next) {
     .then(temperatureData => {
       var temperatureObject = {};
       var temperatureDatavalue = temperatureData.body[0].value;
-      if (temperatureDatavalue) {
+      if (temperatureDatavalue || temperatureDatavalue == 0) {
       if (27 >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= 20) {
         temperatureObject.Status=ThresholdsEnum.temperature.normal;
       }
@@ -569,7 +571,7 @@ async function getHumidityMeraki(req, res, next) {
     .then(humidityData => {
       var humidityObject = {};
       var humidityDatavalue = humidityData.body[0].value;
-      if (humidityDatavalue) {
+      if (humidityDatavalue || humidityDatavalue == 0) {
       if (50 >= Number(humidityDatavalue) && Number(humidityDatavalue) >= 30) {
         humidityObject.Status=ThresholdsEnum.humidity.normal;
       }
@@ -622,7 +624,6 @@ async function getHumidityMeraki(req, res, next) {
  * @param {function} next 
  */
 async function getWaterLeakTest(req, res, next) {
-  debugger
   var deviceSerial = req.query.deviceSerial;
   var merakiNetworkID = req.query.merakiNetworkID;
   var metric = req.query.metric;
@@ -632,8 +633,8 @@ async function getWaterLeakTest(req, res, next) {
     .then(waterLeakData => {
 
       var waterLeakObject = {};
-      var waterLeakDatavalue = waterLeakData.body[0];
-      if (waterLeakDatavalue) {
+      var waterLeakDatavalue = waterLeakData.body[0].value;
+      if (waterLeakDatavalue || waterLeakDatavalue == 0 ) {
         console.log("waterLeakDatavalue",waterLeakDatavalue)
       if (Number(waterLeakDatavalue) == 0) {
         waterLeakObject.Status=ThresholdsEnum.waterLeak.normal;
@@ -695,14 +696,15 @@ async function getDoorStatus(req, res, next) {
     .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
     .then(doorStatusData => {
       var doorStatusObject = {};
-      var doorStatusDatavalue = doorStatusData.body[0].value;
-      if (doorStatusDatavalue) {
+      var doorStatusDatavalue = doorStatusData.body[0].eventData.value;
+      console.log('############',doorStatusData.body)
+      if (doorStatusDatavalue || doorStatusDatavalue == 0) {
       if (Number(doorStatusDatavalue) == 0) {
         doorStatusObject.Status=ThresholdsEnum.doorStatus.open;
       }else{
         doorStatusObject.Status=ThresholdsEnum.doorStatus.locked;
       }
-      doorStatusObject.value=doorStatusDatavalue;
+      doorStatusObject.value=doorStatusData.body;
       // console.log('doorStatusData', doorStatusData.body.properties.value);
        res.status(200).send(doorStatusObject); } else { res.status(200).send([]); }
     })
