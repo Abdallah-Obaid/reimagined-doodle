@@ -14,6 +14,7 @@ const { json } = require('express');
 const { error } = require('console');
 const ThresholdsEnum = require('../src/enum/thresholdsEnum')
 var DynamicAlerts  = require('./dynamicAlerts/dynamicAlerts');
+console.log('DynamicAlertsDynamicAlerts',DynamicAlerts)
 var HistoricalData  = require('./historicalData/historicalData');
 // Main routs
 router.get('/loadRtspStream', loadRtspStream);
@@ -236,9 +237,9 @@ async function getSmoke(req, res, next) {
       var smokeDatavalue = smokeData.body.properties.value;
       if (smokeDatavalue) {
       if (smokeDatavalue == 'true') {
-        smokeObject.Status=ThresholdsEnum.smokeAlarm.fire;
+        smokeObject.status=ThresholdsEnum.smokeAlarm.fire;
       }else{
-        smokeObject.Status=ThresholdsEnum.smokeAlarm.normal;
+        smokeObject.status=ThresholdsEnum.smokeAlarm.normal;
       }
       smokeObject.value=smokeDatavalue;
       // console.log('smokeData', smokeData.body.properties.value);
@@ -266,13 +267,13 @@ async function getDust(req, res, next) {
       var dustDatavalue = dustData.body.properties.value;
       if (dustDatavalue) {
       if (50 >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
-        dustObject.Status=ThresholdsEnum.dust.normal;
+        dustObject.status=ThresholdsEnum.dust.normal;
       }
       if (50 < Number(dustDatavalue) && Number(dustDatavalue) <= 100) {
-        dustObject.Status=ThresholdsEnum.dust.moderate;
+        dustObject.status=ThresholdsEnum.dust.moderate;
       }
       if (Number(dustDatavalue) > 100) {
-        dustObject.Status=ThresholdsEnum.dust.high;
+        dustObject.status=ThresholdsEnum.dust.high;
       }
       dustObject.value=dustDatavalue;
       // console.log('dustData', dustData.body.properties.value);
@@ -326,13 +327,13 @@ async function getCo2(req, res, next) {
       var co2Datavalue = co2Data.body.properties.value;
       if (co2Datavalue) {
       if (1000 >= Number(co2Datavalue) && Number(co2Datavalue) >= 400) {
-        co2Object.Status=ThresholdsEnum.co2.normal;
+        co2Object.status=ThresholdsEnum.co2.normal;
       }
       if (1000 < Number(co2Datavalue)) {
-        co2Object.Status=ThresholdsEnum.co2.high;
+        co2Object.status=ThresholdsEnum.co2.high;
       }
       if (Number(co2Datavalue) < 400) {
-        co2Object.Status=ThresholdsEnum.co2.low;
+        co2Object.status=ThresholdsEnum.co2.low;
       }
       co2Object.value=co2Datavalue;
       // console.log('co2Data', co2Data.body.properties.value);
@@ -481,7 +482,7 @@ async function postPowerSwitch(req, res, next) {
     .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
     .then(openDoorSwitch => {
 
-      console.log('openDoorSwitch', openDoorSwitch.body);
+      // console.log('openDoorSwitch', openDoorSwitch.body);
      if (openDoorSwitch.body) { res.status(200).send(openDoorSwitch.body); } else { res.status(200).send([]); }
 
    })
@@ -509,13 +510,13 @@ async function getTemperatureMeraki(req, res, next) {
       var temperatureDatavalue = temperatureData.body[0].value;
       if (temperatureDatavalue || temperatureDatavalue == 0) {
       if (27 >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= 20) {
-        temperatureObject.Status=ThresholdsEnum.temperature.normal;
+        temperatureObject.status=ThresholdsEnum.temperature.normal;
       }
       if (27 < Number(temperatureDatavalue)) {
-        temperatureObject.Status=ThresholdsEnum.temperature.high;
+        temperatureObject.status=ThresholdsEnum.temperature.high;
       }
       if (Number(temperatureDatavalue) < 20) {
-        temperatureObject.Status=ThresholdsEnum.temperature.low;
+        temperatureObject.status=ThresholdsEnum.temperature.low;
       }
       temperatureObject.value=temperatureDatavalue;
       // console.log('temperatureData', temperatureData.body.properties.value);
@@ -575,16 +576,16 @@ async function getHumidityMeraki(req, res, next) {
       var humidityDatavalue = humidityData.body[0].value;
       if (humidityDatavalue || humidityDatavalue == 0) {
       if (50 >= Number(humidityDatavalue) && Number(humidityDatavalue) >= 30) {
-        humidityObject.Status=ThresholdsEnum.humidity.normal;
+        humidityObject.status=ThresholdsEnum.humidity.normal;
       }
       if (50 < Number(humidityDatavalue)) {
-        humidityObject.Status=ThresholdsEnum.humidity.high;
+        humidityObject.status=ThresholdsEnum.humidity.high;
       }
       if (Number(humidityDatavalue) < 30) {
-        humidityObject.Status=ThresholdsEnum.humidity.low;
+        humidityObject.status=ThresholdsEnum.humidity.low;
       }
       humidityObject.value=humidityDatavalue;
-      // console.log('humidityData', humidityData.body.properties.value);
+       console.log('humidityObjecthumidityObjecthumidityObjecthumidityObjecthumidityObject', humidityObject);
        res.status(200).send(humidityObject); } else { res.status(200).send([]); }
     })
     .catch(err => {
@@ -637,11 +638,11 @@ async function getWaterLeakTest(req, res, next) {
       var waterLeakObject = {};
       var waterLeakDatavalue = waterLeakData.body[0].value;
       if (waterLeakDatavalue || waterLeakDatavalue == 0 ) {
-        console.log("waterLeakDatavalue",waterLeakDatavalue)
+        // console.log("waterLeakDatavalue",waterLeakDatavalue)
       if (Number(waterLeakDatavalue) == 0) {
-        waterLeakObject.Status=ThresholdsEnum.waterLeak.normal;
+        waterLeakObject.status=ThresholdsEnum.waterLeak.normal;
       }else{
-        waterLeakObject.Status=ThresholdsEnum.waterLeak.leak;
+        waterLeakObject.status=ThresholdsEnum.waterLeak.leak;
       }
       waterLeakObject.value=waterLeakDatavalue;
       // console.log('waterLeakData', waterLeakData.body.properties.value);
@@ -699,12 +700,12 @@ async function getDoorStatus(req, res, next) {
     .then(doorStatusData => {
       var doorStatusObject = {};
       var doorStatusDatavalue = doorStatusData.body[0].eventData.value;
-      console.log('############',doorStatusData.body)
+      // console.log('############',doorStatusData.body)
       if (doorStatusDatavalue || doorStatusDatavalue == 0) {
       if (Number(doorStatusDatavalue) == 0) {
-        doorStatusObject.Status=ThresholdsEnum.doorStatus.open;
+        doorStatusObject.status=ThresholdsEnum.doorStatus.open;
       }else{
-        doorStatusObject.Status=ThresholdsEnum.doorStatus.locked;
+        doorStatusObject.status=ThresholdsEnum.doorStatus.locked;
       }
       doorStatusObject.value=doorStatusData.body;
       // console.log('doorStatusData', doorStatusData.body.properties.value);

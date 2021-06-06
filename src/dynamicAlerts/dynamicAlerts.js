@@ -46,15 +46,15 @@ async function getDust() {
       var dustDatavalue = dustData.body.properties.value;
       if (dustDatavalue) {
         if (50 >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
-          dustObject.Status=SensorAlertSeverityEnum.alertSeverity.normal;
+          dustObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
         if (50 < Number(dustDatavalue) && Number(dustDatavalue) <= 100) {
-          dustObject.Status=SensorAlertSeverityEnum.alertSeverity.moderate;
-          alertSender(SensorTypeEnum.sensorType.dust,dustObject.value,dustObject.Status,new Date());
+          dustObject.status=SensorAlertSeverityEnum.alertSeverity.moderate;
+          alertSender(SensorTypeEnum.sensorType.dust,dustObject.value,dustObject.status,new Date());
         }
         if (Number(dustDatavalue) > 100) {
-          dustObject.Status=SensorAlertSeverityEnum.alertSeverity.high;
-          alertSender(SensorTypeEnum.sensorType.dust,dustObject.value,dustObject.Status,new Date());
+          dustObject.status=SensorAlertSeverityEnum.alertSeverity.high;
+          alertSender(SensorTypeEnum.sensorType.dust,dustObject.value,dustObject.status,new Date());
         }
         dustObject.value=dustDatavalue;
 
@@ -82,15 +82,15 @@ async function getSmoke() {
       var co2Datavalue = co2Data.body.properties.value;
       if (co2Datavalue) {
         if (1000 >= Number(co2Datavalue) && Number(co2Datavalue) >= 400) {
-          co2Object.Status=SensorAlertSeverityEnum.alertSeverity.normal;
+          co2Object.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
         if (1000 < Number(co2Datavalue)) {
-          co2Object.Status=SensorAlertSeverityEnum.alertSeverity.high;
-          alertSender(SensorTypeEnum.sensorType.co2,co2Object.value,co2Object.Status,new Date());
+          co2Object.status=SensorAlertSeverityEnum.alertSeverity.high;
+          alertSender(SensorTypeEnum.sensorType.co2,co2Object.value,co2Object.status,new Date());
         }
         if (Number(co2Datavalue) < 400) {
-          co2Object.Status=SensorAlertSeverityEnum.alertSeverity.low;
-          alertSender(SensorTypeEnum.sensorType.co2,co2Object.value,co2Object.Status,new Date());
+          co2Object.status=SensorAlertSeverityEnum.alertSeverity.low;
+          alertSender(SensorTypeEnum.sensorType.co2,co2Object.value,co2Object.status,new Date());
         }
         co2Object.value=co2Datavalue;
       } 
@@ -117,15 +117,15 @@ async function getTemperatureMeraki() {
       var temperatureDatavalue = temperatureData.body[0].value;
       if (temperatureDatavalue || temperatureDatavalue == 0) {
         if (27 >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= 20) {
-          temperatureObject.Status=SensorAlertSeverityEnum.alertSeverity.normal;
+          temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
         if (27 < Number(temperatureDatavalue)) {
-          temperatureObject.Status=SensorAlertSeverityEnum.alertSeverity.high;
-          alertSender(SensorTypeEnum.sensorType.temperature,temperatureObject.value,temperatureObject.Status,new Date());
+          temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.high;
+          alertSender(SensorTypeEnum.sensorType.temperature,temperatureObject.value,temperatureObject.status,new Date());
         }
         if (Number(temperatureDatavalue) < 20) {
-          temperatureObject.Status=SensorAlertSeverityEnum.alertSeverity.low;
-          alertSender(SensorTypeEnum.sensorType.temperature,temperatureObject.value,temperatureObject.Status,new Date());
+          temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.low;
+          alertSender(SensorTypeEnum.sensorType.temperature,temperatureObject.value,temperatureObject.status,new Date());
         }
         temperatureObject.value=temperatureDatavalue;
       }
@@ -151,15 +151,15 @@ async function getHumidityMeraki() {
       var humidityDatavalue = humidityData.body[0].value;
       if (humidityDatavalue || humidityDatavalue == 0) {
         if (50 >= Number(humidityDatavalue) && Number(humidityDatavalue) >= 30) {
-          humidityObject.Status=SensorAlertSeverityEnum.alertSeverity.normal;
+          humidityObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
         if (50 < Number(humidityDatavalue)) {
-          humidityObject.Status=SensorAlertSeverityEnum.alertSeverity.high;
-          alertSender(SensorTypeEnum.sensorType.humidity,humidityObject.value,humidityObject.Status,new Date()); 
+          humidityObject.status=SensorAlertSeverityEnum.alertSeverity.high;
+          alertSender(SensorTypeEnum.sensorType.humidity,humidityObject.value,humidityObject.status,new Date()); 
         }
         if (Number(humidityDatavalue) < 30) {
-          humidityObject.Status=SensorAlertSeverityEnum.alertSeverity.low;
-          alertSender(SensorTypeEnum.sensorType.humidity,humidityObject.value,humidityObject.Status,new Date()); 
+          humidityObject.status=SensorAlertSeverityEnum.alertSeverity.low;
+          alertSender(SensorTypeEnum.sensorType.humidity,humidityObject.value,humidityObject.status,new Date()); 
         }
         humidityObject.value=humidityDatavalue;
       } 
@@ -188,10 +188,10 @@ async function getWaterLeakTest() {
       if (waterLeakDatavalue || waterLeakDatavalue == 0 ) {
         console.log('waterLeakDatavalue',waterLeakDatavalue);
         if (Number(waterLeakDatavalue) == 0) {
-          waterLeakObject.Status=SensorAlertSeverityEnum.alertSeverity.normal;
+          waterLeakObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }else{
-          waterLeakObject.Status=SensorAlertSeverityEnum.alertSeverity.leak;
-          alertSender(SensorTypeEnum.sensorType.waterLeak,waterLeakObject.value,waterLeakObject.Status,new Date());
+          waterLeakObject.status=SensorAlertSeverityEnum.alertSeverity.leak;
+          alertSender(SensorTypeEnum.sensorType.waterLeak,waterLeakObject.value,waterLeakObject.status,new Date());
         }
         waterLeakObject.value=waterLeakDatavalue;
       }

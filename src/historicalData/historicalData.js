@@ -18,10 +18,10 @@ var historicalDataGenerator= function(typeId,readingValue,readingStatus,readingD
     .send({ TypeId: typeId, ReadingValue: readingValue ,ReadingStatus: readingStatus, ReadingDate: readingDate })
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .then(done => {
-      console.log('Alert sent: ',typeId);
+      console.log('Data appended sent: ',typeId);
     })
     .catch(err => {
-      console.log('Alert sending error: ', err);
+      console.log('Historical data append error: ', err);
     });
 };
 
@@ -41,15 +41,15 @@ async function getDust() {
       var dustDatavalue = dustData.body.properties.value;
       if (dustDatavalue) {
         if (50 >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
-          dustObject.Status=SensorAlertSeverityEnum.alertSeverity.normal;
+          dustObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
         if (50 < Number(dustDatavalue) && Number(dustDatavalue) <= 100) {
-          dustObject.Status=SensorAlertSeverityEnum.alertSeverity.moderate;
+          dustObject.status=SensorAlertSeverityEnum.alertSeverity.moderate;
         }
         if (Number(dustDatavalue) > 100) {
-          dustObject.Status=SensorAlertSeverityEnum.alertSeverity.high;
+          dustObject.status=SensorAlertSeverityEnum.alertSeverity.high;
         }
-        historicalDataGenerator(SensorTypeEnum.sensorType.dust,dustObject.value,dustObject.Status,new Date());
+        historicalDataGenerator(SensorTypeEnum.sensorType.dust,dustObject.value,dustObject.status,new Date());
 
         dustObject.value=dustDatavalue;
 
@@ -77,15 +77,15 @@ async function getSmoke() {
       var co2Datavalue = co2Data.body.properties.value;
       if (co2Datavalue) {
         if (1000 >= Number(co2Datavalue) && Number(co2Datavalue) >= 400) {
-          co2Object.Status=SensorAlertSeverityEnum.alertSeverity.normal;
+          co2Object.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
         if (1000 < Number(co2Datavalue)) {
-          co2Object.Status=SensorAlertSeverityEnum.alertSeverity.high;
+          co2Object.status=SensorAlertSeverityEnum.alertSeverity.high;
         }
         if (Number(co2Datavalue) < 400) {
-          co2Object.Status=SensorAlertSeverityEnum.alertSeverity.low;
+          co2Object.status=SensorAlertSeverityEnum.alertSeverity.low;
         }
-        historicalDataGenerator(SensorTypeEnum.sensorType.co2,co2Object.value,co2Object.Status,new Date());
+        historicalDataGenerator(SensorTypeEnum.sensorType.co2,co2Object.value,co2Object.status,new Date());
 
         co2Object.value=co2Datavalue;
       } 
@@ -101,6 +101,6 @@ var initialeHistoricalDataService= function(){
     getSmoke();
   }, HISTORICAL_DATA_INTERVAL); 
 };
-historicalData.historicalDataGenerator= initialeHistoricalDataService;
+historicalData.initialeHistoricalDataService= initialeHistoricalDataService;
 
 module.exports = historicalData;
