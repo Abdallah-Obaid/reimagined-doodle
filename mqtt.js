@@ -1,8 +1,8 @@
 'use strict';
 var mqtt  = require('mqtt');
-var alerts  = require('../src/dynamicAlerts/dynamicAlerts');
-const SensorTypeEnum = require('../src/enum/sensorTypeEnum');
-const SensorAlertSeverityEnum = require('../src/enum/sensorAlertSeverityEnum');
+var alerts  = require('./src/dynamicAlerts/dynamicAlerts');
+const SensorTypeEnum = require('./src/enum/sensorTypeEnum.js');
+const SensorAlertSeverityEnum = require('./src/enum/sensorAlertSeverityEnum');
 
 // Global vars
 var MqttTester={};

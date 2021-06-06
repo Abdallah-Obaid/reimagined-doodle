@@ -1,8 +1,6 @@
 'use strict';
 
 var MqttTester  = require('../mqtt');
-var DynamicAlerts  = require('../src/dynamicAlerts/dynamicAlerts');
-var HistoricalData  = require('../src/historicalData/historicalData');
 var helper  = require('../helper');
 const superagent = require('superagent');
 const express = require('express');
@@ -15,6 +13,8 @@ var Stream = require('./lib/videoStream');
 const { json } = require('express');
 const { error } = require('console');
 const ThresholdsEnum = require('../src/enum/thresholdsEnum')
+var DynamicAlerts  = require('./dynamicAlerts/dynamicAlerts');
+var HistoricalData  = require('./historicalData/historicalData');
 // Main routs
 router.get('/loadRtspStream', loadRtspStream);
 router.get('/recordedVideo', loadVideo);

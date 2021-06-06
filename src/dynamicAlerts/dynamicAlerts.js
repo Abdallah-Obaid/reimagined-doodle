@@ -1,7 +1,7 @@
 'use strict';
 const superagent = require('superagent');
-const SensorTypeEnum = require('../src/enum/sensorTypeEnum');
-const SensorAlertSeverityEnum = require('../src/enum/sensorAlertEnum');
+const SensorTypeEnum = require('../../src/enum/sensorTypeEnum.js');
+const SensorAlertSeverityEnum = require('../../src/enum/sensorAlertSeverityEnum.js');
 
 // Application setup
 const CMS_URL = process.env.CMS_URL;
