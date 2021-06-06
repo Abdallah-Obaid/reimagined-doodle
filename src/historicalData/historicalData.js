@@ -16,7 +16,7 @@ var historicalData={};
 var historicalDataGenerator= function(typeId,readingValue,readingStatus,readingDate){
   superagent.post(`${CMS_URL}/Alerts/SaveHistoryRecord`)
     .send({ TypeId: typeId, ReadingValue: readingValue ,ReadingStatus: readingStatus, ReadingDate: readingDate })
-    .set('Content-Type', 'application/x-www-form-urlencoded')
+    // .set('Content-Type', 'application/x-www-form-urlencoded')
     .then(done => {
       console.log('Data appended sent: ',typeId);
     })
@@ -49,7 +49,7 @@ async function getDust() {
         if (Number(dustDatavalue) > 100) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.high;
         }
-        historicalDataGenerator(SensorTypeEnum.sensorType.dust,dustObject.value,dustObject.status,new Date());
+        historicalDataGenerator(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date());
 
         dustObject.value=dustDatavalue;
 
@@ -85,7 +85,7 @@ async function getSmoke() {
         if (Number(co2Datavalue) < 400) {
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.low;
         }
-        historicalDataGenerator(SensorTypeEnum.sensorType.co2,co2Object.value,co2Object.status,new Date());
+        historicalDataGenerator(SensorTypeEnum.sensorType.co2,Number(co2Datavalue),co2Object.status,new Date());
 
         co2Object.value=co2Datavalue;
       } 
