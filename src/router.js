@@ -386,15 +386,20 @@ async function getHistoricalCo2Fibaro(req, res, next) {
  */
 async function getPowerConsumption(req, res, next) {
   var powerDeviceID = req.query.deviceID;
-  // var powerDeviceID = 59;
-  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices/${powerDeviceID}`)
+  var powerDeviceIDAmpere = req.query.deviceIDAmpere;
+  var powerDeviceIDVolt = req.query.deviceIDVolt;
+  var powerObject = {};
+  powerObject.value={};
+
+  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices?parentId=${powerDeviceID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
     .then(powerData => {
-
-      // console.log('smokeData', smokeData.body.properties.value);
-      if (powerData.body.properties.value) { res.status(200).send(powerData.body.properties.value); } else { res.status(200).send([]); }
-
+      const filterPowerData = powerData.body.filter((itemInArray) => {return (itemInArray.id == powerDeviceIDAmpere ||itemInArray.id == powerDeviceIDVolt)  ;});
+      powerObject.value.ampere = Number(filterPowerData[1].properties.value);
+      powerObject.value.volt = Math.abs(filterPowerData[0].properties.value);
+      powerObject.value.watt = Math.abs(filterPowerData[0].properties.value * filterPowerData[1].properties.value);
+      if (powerObject) { res.status(200).send(powerObject); } else { res.status(200).send([]); }
     })
     .catch(err => {
       console.log('Power sensor error: ', err);

@@ -95,10 +95,37 @@ async function getSmoke() {
     });
 }
 
+/** 
+ * This function will get the data and generator historical data from Fibaro sensor
+ * @param {obj} req 
+ * @param {obj} res 
+ * @param {function} next 
+ */
+async function getPower() {
+  var powerDeviceID = 58;
+  var powerDeviceIDAmpere = 70;
+  var powerDeviceIDVolt = 69;
+  var powerObject = {};
+  powerObject.value={};
+  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices?parentId=${powerDeviceID}`)
+    .set('Content-Type', 'application/x-www-form-urlencoded')
+    .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
+    .then(powerData => {
+      powerObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
+      const filterPowerData = powerData.body.filter((itemInArray) => {return (itemInArray.id == powerDeviceIDAmpere ||itemInArray.id == powerDeviceIDVolt)  ;});
+      powerObject.value = Math.abs(filterPowerData[0].properties.value * filterPowerData[1].properties.value);
+      historicalDataGenerator(SensorTypeEnum.sensorType.power,Number(powerObject.value),powerObject.status,new Date());
+    })
+    .catch(err => {
+      console.log('Power alert sensor error: ', err);
+    });
+}
+
 var initialeHistoricalDataService= function(){
   setInterval(()=>{
     getDust();
     getSmoke();
+    getPower();
   }, HISTORICAL_DATA_INTERVAL); 
 };
 historicalData.initialeHistoricalDataService= initialeHistoricalDataService;

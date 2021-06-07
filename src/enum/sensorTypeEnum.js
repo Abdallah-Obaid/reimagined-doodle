@@ -8,6 +8,7 @@ var sensorType ={
   temperature :4,
   humidity:5,
   waterLeak:6,
+  power:7,
 };
 SensorTypeEnum.sensorType = sensorType ;
 module.exports = SensorTypeEnum;
