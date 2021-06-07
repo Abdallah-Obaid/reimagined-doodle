@@ -59,6 +59,12 @@ var lightsControl = {
 };
 ThresholdsEnum.lightsControl=lightsControl;
 
+var acControl = {
+  on : 1,
+  off:2,
+};
+ThresholdsEnum.acControl=acControl;
+
 module.exports = ThresholdsEnum;
 
 // # Thresholds:

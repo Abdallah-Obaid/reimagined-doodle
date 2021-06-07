@@ -3,6 +3,7 @@
 var MqttTester  = require('../mqtt');
 var helper  = require('../helper');
 const superagent = require('superagent');
+const ewelink = require('ewelink-api'); // For Ac switch
 const express = require('express');
 const router = express.Router();
 var cp = require('child_process');
@@ -12,10 +13,10 @@ var modulecount = require('./lib/mpeg1muxer');
 var Stream = require('./lib/videoStream');
 const { json } = require('express');
 const { error } = require('console');
-const ThresholdsEnum = require('../src/enum/thresholdsEnum')
+const ThresholdsEnum = require('../src/enum/thresholdsEnum');
 var DynamicAlerts  = require('./dynamicAlerts/dynamicAlerts');
-console.log('DynamicAlertsDynamicAlerts',DynamicAlerts)
 var HistoricalData  = require('./historicalData/historicalData');
+
 // Main routs
 router.get('/loadRtspStream', loadRtspStream);
 router.get('/recordedVideo', loadVideo);
@@ -50,8 +51,11 @@ router.get('/getHistoricalWaterLeakMeraki/', getHistoricalWaterLeakMeraki);
 router.get('/getHumidityMeraki', getHumidityMeraki);
 router.get('/getWaterLeakTest', getWaterLeakTest);
 router.get('/getDoorStatus', getDoorStatus);
-router.get('/getSoundAlarm',getSoundAlarm)
+router.get('/getSoundAlarm',getSoundAlarm);
 
+// SonOff routs
+router.get('/checkAcSwitchStatus/', checkAcSwitchStatus);
+router.get('/SwitchAcSwitchSonOff/', SwitchAcSwitchSonOff);
 
 // Mqtt routs
 router.get('/runMqtt/', runMqtt);
@@ -68,15 +72,17 @@ const CAMERAIP = process.env.CAMERAIP;
 const CAMERAPORT = process.env.CAMERAPORT;
 const MERAKI_API_KEY = process.env.MERAKI_API_KEY;
 const SENSORS_NUMBER = process.env.SENSORS_NUMBER;
-console.log(FIBARO_PASSWORD , FIBARO_USER_NAME )
+const SONOFF_PASSWORD = process.env.SONOFF_PASSWORD;
+const SONOFF_EMAIL = process.env.SONOFF_EMAIL;
+console.log(FIBARO_PASSWORD , FIBARO_USER_NAME );
 
 // Direct calls
 
-  // getSmokeThreshold();
-  // loadRtspStream();
-  runMqtt();
-  // DynamicAlerts.initialeAlertService();
-  // HistoricalData.initialeHistoricalDataService();
+// getSmokeThreshold();
+// loadRtspStream();
+runMqtt();
+//DynamicAlerts.initialeAlertService();
+//HistoricalData.initialeHistoricalDataService();
 
 // Global Vars
 var soundAlarm = false;
@@ -179,7 +185,7 @@ async function getTemperatureFibaro(req, res, next) {
  * @param {obj} res 
  * @param {function} next 
  */
- async function getHistoricalTemperatureFibaro(req, res, next) {
+async function getHistoricalTemperatureFibaro(req, res, next) {
   var tempDeviceID = req.query.deviceID;
   var dateDiff = req.query.dateDiff;
   superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS}/api/temperature/now-${dateDiff}/now/summary-graph/devices/temperature/${tempDeviceID}`)
@@ -236,14 +242,14 @@ async function getSmoke(req, res, next) {
       var smokeObject = {};
       var smokeDatavalue = smokeData.body.properties.value;
       if (smokeDatavalue) {
-      if (smokeDatavalue == 'true') {
-        smokeObject.status=ThresholdsEnum.smokeAlarm.fire;
-      }else{
-        smokeObject.status=ThresholdsEnum.smokeAlarm.normal;
-      }
-      smokeObject.value=smokeDatavalue;
-      // console.log('smokeData', smokeData.body.properties.value);
-       res.status(200).send(smokeObject); } else { res.status(200).send([]); }
+        if (smokeDatavalue == 'true') {
+          smokeObject.status=ThresholdsEnum.smokeAlarm.fire;
+        }else{
+          smokeObject.status=ThresholdsEnum.smokeAlarm.normal;
+        }
+        smokeObject.value=smokeDatavalue;
+        // console.log('smokeData', smokeData.body.properties.value);
+        res.status(200).send(smokeObject); } else { res.status(200).send([]); }
     })
     .catch(err => {
       console.log('Smoke sensor error: ', err);
@@ -266,18 +272,18 @@ async function getDust(req, res, next) {
       var dustObject = {};
       var dustDatavalue = dustData.body.properties.value;
       if (dustDatavalue) {
-      if (50 >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
-        dustObject.status=ThresholdsEnum.dust.normal;
-      }
-      if (50 < Number(dustDatavalue) && Number(dustDatavalue) <= 100) {
-        dustObject.status=ThresholdsEnum.dust.moderate;
-      }
-      if (Number(dustDatavalue) > 100) {
-        dustObject.status=ThresholdsEnum.dust.high;
-      }
-      dustObject.value=dustDatavalue;
-      // console.log('dustData', dustData.body.properties.value);
-       res.status(200).send(dustObject); } else { res.status(200).send([]); }
+        if (50 >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
+          dustObject.status=ThresholdsEnum.dust.normal;
+        }
+        if (50 < Number(dustDatavalue) && Number(dustDatavalue) <= 100) {
+          dustObject.status=ThresholdsEnum.dust.moderate;
+        }
+        if (Number(dustDatavalue) > 100) {
+          dustObject.status=ThresholdsEnum.dust.high;
+        }
+        dustObject.value=dustDatavalue;
+        // console.log('dustData', dustData.body.properties.value);
+        res.status(200).send(dustObject); } else { res.status(200).send([]); }
 
     })
     .catch(err => {
@@ -292,7 +298,7 @@ async function getDust(req, res, next) {
  * @param {obj} res 
  * @param {function} next 
  */
- async function getHistoricalDustFibaro(req, res, next) {
+async function getHistoricalDustFibaro(req, res, next) {
   var dustDeviceID = req.query.deviceID;
   var t0 = req.query.t0;
   var t1 = req.query.t1;
@@ -326,18 +332,18 @@ async function getCo2(req, res, next) {
       var co2Object = {};
       var co2Datavalue = co2Data.body.properties.value;
       if (co2Datavalue) {
-      if (1000 >= Number(co2Datavalue) && Number(co2Datavalue) >= 400) {
-        co2Object.status=ThresholdsEnum.co2.normal;
-      }
-      if (1000 < Number(co2Datavalue)) {
-        co2Object.status=ThresholdsEnum.co2.high;
-      }
-      if (Number(co2Datavalue) < 400) {
-        co2Object.status=ThresholdsEnum.co2.low;
-      }
-      co2Object.value=co2Datavalue;
-      // console.log('co2Data', co2Data.body.properties.value);
-       res.status(200).send(co2Object); } else { res.status(200).send([]); }
+        if (1000 >= Number(co2Datavalue) && Number(co2Datavalue) >= 400) {
+          co2Object.status=ThresholdsEnum.co2.normal;
+        }
+        if (1000 < Number(co2Datavalue)) {
+          co2Object.status=ThresholdsEnum.co2.high;
+        }
+        if (Number(co2Datavalue) < 400) {
+          co2Object.status=ThresholdsEnum.co2.low;
+        }
+        co2Object.value=co2Datavalue;
+        // console.log('co2Data', co2Data.body.properties.value);
+        res.status(200).send(co2Object); } else { res.status(200).send([]); }
 
     })
     .catch(err => {
@@ -352,7 +358,7 @@ async function getCo2(req, res, next) {
  * @param {obj} res 
  * @param {function} next 
  */
- async function getHistoricalCo2Fibaro(req, res, next) {
+async function getHistoricalCo2Fibaro(req, res, next) {
   var co2DeviceID = req.query.deviceID;
   var t0 = req.query.t0;
   var t1 = req.query.t1;
@@ -378,7 +384,7 @@ async function getCo2(req, res, next) {
  * @param {obj} res 
  * @param {function} next 
  */
- async function getPowerConsumption(req, res, next) {
+async function getPowerConsumption(req, res, next) {
   var powerDeviceID = req.query.deviceID;
   // var powerDeviceID = 59;
   superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices/${powerDeviceID}`)
@@ -429,9 +435,9 @@ async function getHistoricalPowerConsumption(req, res, next) {
  */
 async function checkSwitchStatus(req, res, next) {
   var CheckSwitchStatusID = req.query.deviceID;
-  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS}/api/devices/${CheckSwitchStatusID}`)
+  superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices/${CheckSwitchStatusID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
-    .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
+    .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
     .then(checkSwitchStatus => {
 
       // console.log('checkSwitchStatus', checkSwitchStatus.body.properties.value);
@@ -453,9 +459,9 @@ async function checkSwitchStatus(req, res, next) {
 async function postPowerSwitch(req, res, next) {
   var PostPowerSwitchID = req.query.deviceID;
   var actionName = req.query.actionName;
-  superagent.post(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS}/api/devices/${PostPowerSwitchID}/action/${actionName}`)
+  superagent.post(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices/${PostPowerSwitchID}/action/${actionName}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
-    .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
+    .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
     .then(PostPowerSwitch => {
 
       // console.log('PostPowerSwitch', PostPowerSwitch.body.result);
@@ -469,12 +475,72 @@ async function postPowerSwitch(req, res, next) {
 }
 
 /** 
+ * This function will check Ac switch status from Fibaro sensor
+ * @param {obj} req 
+ * @param {obj} res 
+ * @param {function} next 
+ */
+async function checkAcSwitchStatus(req, res, next) {
+  var CheckSwitchStatusID = req.query.deviceID;
+  var acSwitchObject={};
+  const connection = new ewelink({
+    email: SONOFF_EMAIL,
+    password: SONOFF_PASSWORD,
+    region: 'as',
+  });
+  try {
+    const device = await connection.getDevice(CheckSwitchStatusID);
+    if (device.params.switch == 'on'){
+      acSwitchObject.status = ThresholdsEnum.acControl.on;
+    }else if (device.params.switch == 'off'){
+      acSwitchObject.status = ThresholdsEnum.acControl.off;
+    }
+    acSwitchObject.value = device.params.switch;
+    res.status(200).send(acSwitchObject);
+  }
+  catch(err) {
+    console.log('Check Ac switch status error: ', err);
+    res.status(403).send('Check Ac switch status error');
+  }
+}
+
+/** 
+ * This function will change switch status from Fibaro sensor
+ * @param {obj} req 
+ * @param {obj} res 
+ * @param {function} next 
+ */
+async function SwitchAcSwitchSonOff(req, res, next) {
+  var  switchAcSwitchID = req.query.deviceID;
+  var acSwitchObject={};
+  const connection = new ewelink({
+    email: SONOFF_EMAIL,
+    password: SONOFF_PASSWORD,
+    region: 'as',
+  });
+  try {
+    const switchStatus = await connection.toggleDevice(switchAcSwitchID);
+    if (switchStatus.state == 'on'){
+      acSwitchObject.status = ThresholdsEnum.acControl.on;
+    }else if (switchStatus.state == 'off'){
+      acSwitchObject.status = ThresholdsEnum.acControl.off;
+    }
+    acSwitchObject.value = switchStatus.state;
+    res.status(200).send(acSwitchObject);
+  }
+  catch(err) {
+    console.log('Switch Ac switch status error: ', err);
+    res.status(403).send('Switch Ac switch status error');
+  }
+}
+
+/** 
  * This function will open door switch status from Akuvox sensor
  * @param {obj} req 
  * @param {obj} res 
  * @param {function} next 
  */
- async function openDoorSwitch(req, res, next) {
+async function openDoorSwitch(req, res, next) {
   var doorID = req.query.doorID;
   var actionName = req.query.actionName;
   superagent.get(`http://${IP_ADDRESS_FOR_AKUVOX_DOOR_PHONE}/fcgi/do?action=${actionName}&DoorNum=${doorID}`)
@@ -483,13 +549,13 @@ async function postPowerSwitch(req, res, next) {
     .then(openDoorSwitch => {
 
       // console.log('openDoorSwitch', openDoorSwitch.body);
-     if (openDoorSwitch.body) { res.status(200).send(openDoorSwitch.body); } else { res.status(200).send([]); }
+      if (openDoorSwitch.body) { res.status(200).send(openDoorSwitch.body); } else { res.status(200).send([]); }
 
-   })
-   .catch(err => {
-     console.log('Door switch sensor error: ', err);
-     res.status(403).send('Power switch sensor error');
-   });
+    })
+    .catch(err => {
+      console.log('Door switch sensor error: ', err);
+      res.status(403).send('Power switch sensor error');
+    });
 }
 
 /** 
@@ -509,18 +575,18 @@ async function getTemperatureMeraki(req, res, next) {
       var temperatureObject = {};
       var temperatureDatavalue = temperatureData.body[0].value;
       if (temperatureDatavalue || temperatureDatavalue == 0) {
-      if (27 >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= 20) {
-        temperatureObject.status=ThresholdsEnum.temperature.normal;
-      }
-      if (27 < Number(temperatureDatavalue)) {
-        temperatureObject.status=ThresholdsEnum.temperature.high;
-      }
-      if (Number(temperatureDatavalue) < 20) {
-        temperatureObject.status=ThresholdsEnum.temperature.low;
-      }
-      temperatureObject.value=temperatureDatavalue;
-      // console.log('temperatureData', temperatureData.body.properties.value);
-       res.status(200).send(temperatureObject); } else { res.status(200).send([]); }
+        if (27 >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= 20) {
+          temperatureObject.status=ThresholdsEnum.temperature.normal;
+        }
+        if (27 < Number(temperatureDatavalue)) {
+          temperatureObject.status=ThresholdsEnum.temperature.high;
+        }
+        if (Number(temperatureDatavalue) < 20) {
+          temperatureObject.status=ThresholdsEnum.temperature.low;
+        }
+        temperatureObject.value=temperatureDatavalue;
+        // console.log('temperatureData', temperatureData.body.properties.value);
+        res.status(200).send(temperatureObject); } else { res.status(200).send([]); }
     })
     .catch(err => {
       console.log('Temperature sensor error: ', err);
@@ -534,7 +600,7 @@ async function getTemperatureMeraki(req, res, next) {
  * @param {obj} res 
  * @param {function} next 
  */
- async function getHistoricalTemperatureMeraki(req, res, next) {
+async function getHistoricalTemperatureMeraki(req, res, next) {
   var deviceSerial = req.query.deviceSerial;
   var merakiNetworkID = req.query.merakiNetworkID;
   var metric = req.query.metric;
@@ -542,8 +608,8 @@ async function getTemperatureMeraki(req, res, next) {
   var t1 = req.query.t1;
   var resolution  = req.query.resolution;
   superagent.get(`https://api.meraki.com/api/v1/networks/${merakiNetworkID}/sensors/stats/historicalBySensor?metric=${metric}&serial=${deviceSerial}&t0=${t0}&t1=${t1}&resolution=${resolution}`)
-  .set('Content-Type', 'application/x-www-form-urlencoded')
-  .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
+    .set('Content-Type', 'application/x-www-form-urlencoded')
+    .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
     .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
     .then(historicalTempData => {
 
@@ -575,18 +641,18 @@ async function getHumidityMeraki(req, res, next) {
       var humidityObject = {};
       var humidityDatavalue = humidityData.body[0].value;
       if (humidityDatavalue || humidityDatavalue == 0) {
-      if (50 >= Number(humidityDatavalue) && Number(humidityDatavalue) >= 30) {
-        humidityObject.status=ThresholdsEnum.humidity.normal;
-      }
-      if (50 < Number(humidityDatavalue)) {
-        humidityObject.status=ThresholdsEnum.humidity.high;
-      }
-      if (Number(humidityDatavalue) < 30) {
-        humidityObject.status=ThresholdsEnum.humidity.low;
-      }
-      humidityObject.value=humidityDatavalue;
-       console.log('humidityObjecthumidityObjecthumidityObjecthumidityObjecthumidityObject', humidityObject);
-       res.status(200).send(humidityObject); } else { res.status(200).send([]); }
+        if (50 >= Number(humidityDatavalue) && Number(humidityDatavalue) >= 30) {
+          humidityObject.status=ThresholdsEnum.humidity.normal;
+        }
+        if (50 < Number(humidityDatavalue)) {
+          humidityObject.status=ThresholdsEnum.humidity.high;
+        }
+        if (Number(humidityDatavalue) < 30) {
+          humidityObject.status=ThresholdsEnum.humidity.low;
+        }
+        humidityObject.value=humidityDatavalue;
+        console.log('humidityObjecthumidityObjecthumidityObjecthumidityObjecthumidityObject', humidityObject);
+        res.status(200).send(humidityObject); } else { res.status(200).send([]); }
     })
     .catch(err => {
       console.log('Humidity sensor error: ', err);
@@ -600,7 +666,7 @@ async function getHumidityMeraki(req, res, next) {
  * @param {obj} res 
  * @param {function} next 
  */
- async function getHistoricalHumidityMeraki(req, res, next) {
+async function getHistoricalHumidityMeraki(req, res, next) {
   var deviceSerial = req.query.deviceSerial;
   var merakiNetworkID = req.query.merakiNetworkID;
   var metric = req.query.metric;
@@ -608,8 +674,8 @@ async function getHumidityMeraki(req, res, next) {
   var t1 = req.query.t1;
   var resolution  = req.query.resolution;
   superagent.get(`https://api.meraki.com/api/v1/networks/${merakiNetworkID}/sensors/stats/historicalBySensor?metric=${metric}&serial=${deviceSerial}&t0=${t0}&t1=${t1}&resolution=${resolution}`)
-  .set('Content-Type', 'application/x-www-form-urlencoded')
-  .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
+    .set('Content-Type', 'application/x-www-form-urlencoded')
+    .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
     .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
     .then(historicalHumidityData => {
       if (historicalHumidityData.body) { res.status(200).send(historicalHumidityData.body); } else { res.status(200).send([]); }
@@ -639,14 +705,14 @@ async function getWaterLeakTest(req, res, next) {
       var waterLeakDatavalue = waterLeakData.body[0].value;
       if (waterLeakDatavalue || waterLeakDatavalue == 0 ) {
         // console.log("waterLeakDatavalue",waterLeakDatavalue)
-      if (Number(waterLeakDatavalue) == 0) {
-        waterLeakObject.status=ThresholdsEnum.waterLeak.normal;
-      }else{
-        waterLeakObject.status=ThresholdsEnum.waterLeak.leak;
-      }
-      waterLeakObject.value=waterLeakDatavalue;
-      // console.log('waterLeakData', waterLeakData.body.properties.value);
-       res.status(200).send(waterLeakObject); } else { res.status(200).send([]); }
+        if (Number(waterLeakDatavalue) == 0) {
+          waterLeakObject.status=ThresholdsEnum.waterLeak.normal;
+        }else{
+          waterLeakObject.status=ThresholdsEnum.waterLeak.leak;
+        }
+        waterLeakObject.value=waterLeakDatavalue;
+        // console.log('waterLeakData', waterLeakData.body.properties.value);
+        res.status(200).send(waterLeakObject); } else { res.status(200).send([]); }
     })
     .catch(err => {
       console.log('WaterLeak sensor error: ', err);
@@ -660,7 +726,7 @@ async function getWaterLeakTest(req, res, next) {
  * @param {obj} res 
  * @param {function} next 
  */
- async function getHistoricalWaterLeakMeraki(req, res, next) {
+async function getHistoricalWaterLeakMeraki(req, res, next) {
   var deviceSerial = req.query.deviceSerial;
   var merakiNetworkID = req.query.merakiNetworkID;
   var metric = req.query.metric;
@@ -668,8 +734,8 @@ async function getWaterLeakTest(req, res, next) {
   var t1 = req.query.t1;
   var resolution  = req.query.resolution;
   superagent.get(`https://api.meraki.com/api/v1/networks/${merakiNetworkID}/sensors/stats/historicalBySensor?metric=${metric}&serial=${deviceSerial}&t0=${t0}&t1=${t1}&resolution=${resolution}`)
-  .set('Content-Type', 'application/x-www-form-urlencoded')
-  .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
+    .set('Content-Type', 'application/x-www-form-urlencoded')
+    .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
     .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
     .then(historicalWaterLeakData => {
 
@@ -702,14 +768,14 @@ async function getDoorStatus(req, res, next) {
       var doorStatusDatavalue = doorStatusData.body[0].eventData.value;
       // console.log('############',doorStatusData.body)
       if (doorStatusDatavalue || doorStatusDatavalue == 0) {
-      if (Number(doorStatusDatavalue) == 0) {
-        doorStatusObject.status=ThresholdsEnum.doorStatus.open;
-      }else{
-        doorStatusObject.status=ThresholdsEnum.doorStatus.locked;
-      }
-      doorStatusObject.value=doorStatusData.body;
-      // console.log('doorStatusData', doorStatusData.body.properties.value);
-       res.status(200).send(doorStatusObject); } else { res.status(200).send([]); }
+        if (Number(doorStatusDatavalue) == 0) {
+          doorStatusObject.status=ThresholdsEnum.doorStatus.open;
+        }else{
+          doorStatusObject.status=ThresholdsEnum.doorStatus.locked;
+        }
+        doorStatusObject.value=doorStatusData.body;
+        // console.log('doorStatusData', doorStatusData.body.properties.value);
+        res.status(200).send(doorStatusObject); } else { res.status(200).send([]); }
     })
     .catch(err => {
       console.log('Door Status sensor error: ', err);
@@ -723,16 +789,16 @@ async function getDoorStatus(req, res, next) {
  * @param {obj} res 
  * @param {function} next 
  */
- async function getSmokeThreshold() {
+async function getSmokeThreshold() {
 
   superagent.get(`https://test.penguinin.com/cms_ahmad/Alerts/GetSmokeThresholds`)
-  .set('Content-Type', 'application/x-www-form-urlencoded')
+    .set('Content-Type', 'application/x-www-form-urlencoded')
     .then(smokeThreshold => {
-      var body = smokeThreshold.body
+      var body = smokeThreshold.body;
       var parsThreshhold= body.thresholds;
       if (smokeThreshold.body) { 
  
-        return smokeThreshold.body; } else { console.log("Smoke threshold error")}
+        return smokeThreshold.body; } else { console.log('Smoke threshold error');}
 
     })
     .catch(err => {
@@ -772,13 +838,13 @@ async function openDoor(req, res, next) {
  */
 async function getSoundAlarm(req, res, next) {
   try {
-    console.log(MqttTester.soundAlarm)
+    console.log(MqttTester.soundAlarm);
     if (MqttTester.soundAlarm == 'noFire') {
       res.status(200).send(MqttTester.soundAlarm);
     } else if (MqttTester.soundAlarm == 'fireAlarm') {
       res.status(200).send(MqttTester.soundAlarm);
     }
-  } catch {
+  } catch (error){
     res.status(404).send(error);
   }
 
@@ -792,33 +858,33 @@ async function getSoundAlarm(req, res, next) {
 */
 function loadVideo(req, res, next) {
   var videoNameQ = req.query.videoName;
-  const path = `recorded_videos/${videoNameQ}.mp4`
-  const stat = fs.statSync(path)
-  const fileSize = stat.size
-  const range = req.headers.range
+  const path = `recorded_videos/${videoNameQ}.mp4`;
+  const stat = fs.statSync(path);
+  const fileSize = stat.size;
+  const range = req.headers.range;
   if (range) {
-    const parts = range.replace(/bytes=/, "").split("-")
-    const start = parseInt(parts[0], 10)
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10);
     const end = parts[1]
       ? parseInt(parts[1], 10)
-      : fileSize - 1
-    const chunksize = (end - start) + 1
-    const file = fs.createReadStream(path, { start, end })
+      : fileSize - 1;
+    const chunksize = (end - start) + 1;
+    const file = fs.createReadStream(path, { start, end });
     const head = {
       'Content-Range': `bytes ${start}-${end}/${fileSize}`,
       'Accept-Ranges': 'bytes',
       'Content-Length': chunksize,
       'Content-Type': 'video/mp4',
-    }
+    };
     res.writeHead(206, head);
     file.pipe(res);
   } else {
     const head = {
       'Content-Length': fileSize,
       'Content-Type': 'video/mp4',
-    }
-    res.writeHead(200, head)
-    fs.createReadStream(path).pipe(res)
+    };
+    res.writeHead(200, head);
+    fs.createReadStream(path).pipe(res);
   }
 }
 
@@ -831,15 +897,15 @@ function loadVideo(req, res, next) {
 function recordList(req, res, next) {
   try {
     var filterDate = req.query.filterDate;
-    console.log("filterDate:",filterDate)
+    console.log('filterDate:',filterDate);
     const testFolder = './recorded_videos/';
-    var fullFileName = []
+    var fullFileName = [];
     fs.readdir(testFolder, (err, files) => {
       files.forEach(file => {
         var fileNameWithoutExt = path.parse(file).name;
         var dateWithoutTime = fileNameWithoutExt.split('_')[0].split('-').join('/');
         if(filterDate==dateWithoutTime){
-        fullFileName.push(fileNameWithoutExt);
+          fullFileName.push(fileNameWithoutExt);
         }
       });
       if (fullFileName) { res.status(200).send(fullFileName.reverse()); } else { res.status(200).send([]); }
