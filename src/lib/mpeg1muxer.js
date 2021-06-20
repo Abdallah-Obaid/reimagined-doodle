@@ -2,7 +2,7 @@ var Mpeg1Muxer, child_process, events, util;
 // var cp = require('child_process')
 // const fs = require('fs');
 child_process = require('child_process');
-
+var counterInterval;
 util = require('util');
 
 events = require('events');
@@ -55,7 +55,8 @@ Mpeg1Muxer = function(options) {
     // console.log('count1',count1)
     return this.emit('mpeg1data', data);
   });
-  setInterval(()=>{ 
+  
+  counterInterval = setInterval(()=>{ 
     // console.log("Pre:",{count1},{count2},{count3})
     if((count2==count1)){
       count3=count3+1
@@ -70,6 +71,7 @@ Mpeg1Muxer = function(options) {
     count4=count3
     // console.log("Post:",{count1},{count2},{count3})
   },2000)
+
   this.stream.stderr.on('data', (data) => {
     // console.log('data2222222222222222222222222',data)
     return this.emit('ffmpegStderr', data);
@@ -90,9 +92,15 @@ util.inherits(Mpeg1Muxer, events.EventEmitter);
 function count3Fun(){
   return count3; 
 }
+function resetCount3Fun(){
+  clearInterval(counterInterval);
+  count3=0; 
+  return count3;
+}
 module.exports = 
 {
   Mpeg1Muxer: Mpeg1Muxer,
   count3: count3Fun,
+  resetCount3: resetCount3Fun,
 };
  

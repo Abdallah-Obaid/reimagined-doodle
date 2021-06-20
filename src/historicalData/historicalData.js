@@ -49,7 +49,7 @@ async function getDust() {
         if (Number(dustDatavalue) > 100) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.high;
         }
-        historicalDataGenerator(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date());
+        historicalDataGenerator(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date().toUTCString());
 
         dustObject.value=dustDatavalue;
 
@@ -85,7 +85,7 @@ async function getSmoke() {
         if (Number(co2Datavalue) < 400) {
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.low;
         }
-        historicalDataGenerator(SensorTypeEnum.sensorType.co2,Number(co2Datavalue),co2Object.status,new Date());
+        historicalDataGenerator(SensorTypeEnum.sensorType.co2,Number(co2Datavalue),co2Object.status,new Date().toUTCString());
 
         co2Object.value=co2Datavalue;
       } 
@@ -114,7 +114,7 @@ async function getPower() {
       powerObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
       const filterPowerData = powerData.body.filter((itemInArray) => {return (itemInArray.id == powerDeviceIDAmpere ||itemInArray.id == powerDeviceIDVolt)  ;});
       powerObject.value = Math.abs(filterPowerData[0].properties.value * filterPowerData[1].properties.value);
-      historicalDataGenerator(SensorTypeEnum.sensorType.power,Number(powerObject.value),powerObject.status,new Date());
+      historicalDataGenerator(SensorTypeEnum.sensorType.power,Number(powerObject.value),powerObject.status,new Date().toUTCString());
     })
     .catch(err => {
       console.log('Power alert sensor error: ', err);

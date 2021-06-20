@@ -18,7 +18,7 @@ var DynamicAlerts  = require('./dynamicAlerts/dynamicAlerts');
 var HistoricalData  = require('./historicalData/historicalData');
 
 // Main routs
-router.get('/loadRtspStream', loadRtspStream);
+// router.get('/loadRtspStream', loadRtspStream);
 router.get('/recordedVideo', loadVideo);
 router.get('/recordList', recordList);
 router.get('/sensorsNumber', sensorsNumber);
@@ -79,10 +79,11 @@ console.log(FIBARO_PASSWORD , FIBARO_USER_NAME );
 // Direct calls
 
 // getSmokeThreshold();
-// loadRtspStream();
+loadRtspStream();
+rtspStreamRestarting();
 runMqtt();
-//DynamicAlerts.initialeAlertService();
-//HistoricalData.initialeHistoricalDataService();
+DynamicAlerts.initialeAlertService();
+HistoricalData.initialeHistoricalDataService();
 
 // Global Vars
 var soundAlarm = false;
@@ -102,17 +103,6 @@ async function loadRtspStream(req, res, next) {
     streamUrl: `rtsp://${CAMERAIP}:${CAMERAPORT}/live`,//`rtsp://${CAMERAIP}:${CAMERAPORT}/live`,//'rtsp://192.168.128.2:9000/live'
     wsPort: 9999,
     ffmpegOptions: { // options ffmpeg flags
-
-      // '-reconnect':'1',
-      // '-reconnect_at_eof' : '1',
-      // '-reconnect_streamed' : '1',
-      // '-reconnect_delay_max' : 4000,
-      // '-stats': '', // an option with no neccessary value uses a blank string
-      // '-r': 25,// options with required values specify the value after the key
-      // '-bufsize': '420p' ,
-      // '-rtsp_transport' : 'tcp',
-      // '-max_delay': 0,
-      // '-r' : '25',
       '-c': 'copy',
       '-f': 'segment',
       '-strftime': '1',
@@ -120,41 +110,30 @@ async function loadRtspStream(req, res, next) {
       // '-segment_format' : 'mp4',
       '-codec:v': 'libx264',
       './recorded_videos/%d-%m-%Y_%H-%M-%S.mp4': '',
-
-
-
-
-
     },
   });
-  var refreshTime = 20; // will be multiplied by 2 sec 
-  setInterval(async () => {
-    console.log('##########', modulecount.count3());
-    if (modulecount.count3() == refreshTime) {
-
-      // console.log('connection lost');
-      // console.log('This is pid ' + process.pid);
-      process.on('exit', async function () {
-        require('child_process').spawn(process.argv.shift(), process.argv, {
-          cwd: process.cwd(),
-          detached: true,
-          stdio: 'inherit',
-        });
-
-      });
-      await cp.exec('pkill ffmpeg', function (err, stdout, stderr) { console.log('kill error:', err); });
-      process.exit(1);
-      // loadRtspStream(req, res, next)
-    }
-  }, 2000);
-
   process.on('SIGINT', async function () {
     await cp.exec('pkill ffmpeg', function (err, stdout, stderr) { console.log('kill error:', err); });
     process.exit(1);
   });
-  res.send('IT WORK');
+  // res.send('IT WORK');
 }
-
+function rtspStreamRestarting(){
+var refreshRtspTime = 10; // will be multiplied by 2 sec 
+setInterval(() => {
+  console.log('##########', modulecount.count3());
+  if (modulecount.count3() == refreshRtspTime) {
+    restartStream()
+  }
+}, 2000);
+}
+async function restartStream(){
+  var cmd = 'ffmpeg...'
+  var child = cp.exec(cmd, function(err, stdout, stderr) {})
+  child.stdin.write('q')
+  await modulecount.resetCount3();
+  loadRtspStream();
+}
 
 /** 
  * This function will get the temperature from Fibaro sensor

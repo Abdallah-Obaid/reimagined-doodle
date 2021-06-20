@@ -50,11 +50,11 @@ async function getDust() {
         }
         if (50 < Number(dustDatavalue) && Number(dustDatavalue) <= 100) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.moderate;
-          alertSender(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date());
+          alertSender(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date().toUTCString());
         }
         if (Number(dustDatavalue) > 100) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.high;
-          alertSender(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date());
+          alertSender(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date().toUTCString());
         }
         dustObject.value=dustDatavalue;
 
@@ -86,11 +86,11 @@ async function getSmoke() {
         }
         if (1000 < Number(co2Datavalue)) {
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.high;
-          alertSender(SensorTypeEnum.sensorType.co2,Number(co2Datavalue),co2Object.status,new Date());
+          alertSender(SensorTypeEnum.sensorType.co2,Number(co2Datavalue),co2Object.status,new Date().toUTCString());
         }
         if (Number(co2Datavalue) < 400) {
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.low;
-          alertSender(SensorTypeEnum.sensorType.co2,Number(co2Datavalue),co2Object.status,new Date());
+          alertSender(SensorTypeEnum.sensorType.co2,Number(co2Datavalue),co2Object.status,new Date().toUTCString());
         }
         co2Object.value=co2Datavalue;
       } 
@@ -121,11 +121,11 @@ async function getTemperatureMeraki() {
         }
         if (27 < Number(temperatureDatavalue)) {
           temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.high;
-          alertSender(SensorTypeEnum.sensorType.temperature,Number(temperatureDatavalue),temperatureObject.status,new Date());
+          alertSender(SensorTypeEnum.sensorType.temperature,Number(temperatureDatavalue),temperatureObject.status,new Date().toUTCString());
         }
         if (Number(temperatureDatavalue) < 20) {
           temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.low;
-          alertSender(SensorTypeEnum.sensorType.temperature,Number(temperatureDatavalue),temperatureObject.status,new Date());
+          alertSender(SensorTypeEnum.sensorType.temperature,Number(temperatureDatavalue),temperatureObject.status,new Date().toUTCString());
         }
         temperatureObject.value=temperatureDatavalue;
       }
@@ -155,11 +155,11 @@ async function getHumidityMeraki() {
         }
         if (50 < Number(humidityDatavalue)) {
           humidityObject.status=SensorAlertSeverityEnum.alertSeverity.high;
-          alertSender(SensorTypeEnum.sensorType.humidity,Number(humidityDatavalue),humidityObject.status,new Date()); 
+          alertSender(SensorTypeEnum.sensorType.humidity,Number(humidityDatavalue),humidityObject.status,new Date().toUTCString()); 
         }
         if (Number(humidityDatavalue) < 30) {
           humidityObject.status=SensorAlertSeverityEnum.alertSeverity.low;
-          alertSender(SensorTypeEnum.sensorType.humidity,Number(humidityDatavalue),humidityObject.status,new Date()); 
+          alertSender(SensorTypeEnum.sensorType.humidity,Number(humidityDatavalue),humidityObject.status,new Date().toUTCString()); 
         }
         humidityObject.value=humidityDatavalue;
       } 
@@ -191,7 +191,7 @@ async function getWaterLeakTest() {
           waterLeakObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }else{
           waterLeakObject.status=SensorAlertSeverityEnum.alertSeverity.leak;
-          alertSender(SensorTypeEnum.sensorType.waterLeak,Number(waterLeakDatavalue),waterLeakObject.status,new Date());
+          alertSender(SensorTypeEnum.sensorType.waterLeak,Number(waterLeakDatavalue),waterLeakObject.status,new Date().toUTCString());
         }
         waterLeakObject.value=waterLeakDatavalue;
       }
