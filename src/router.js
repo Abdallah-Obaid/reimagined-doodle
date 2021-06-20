@@ -128,11 +128,12 @@ setInterval(() => {
 }, 2000);
 }
 async function restartStream(){
-  var cmd = 'ffmpeg...'
-  var child = cp.exec(cmd, function(err, stdout, stderr) {})
-  child.stdin.write('q')
+  // var cmd = 'ffmpeg...'   //for windows
+  // var child = cp.exec(cmd, function(err, stdout, stderr) {})
+  // child.stdin.write('q')
+  await cp.exec('killall -s KILL ffmpeg', function (err, stdout, stderr) { console.log('kill error:', err); });
   await modulecount.resetCount3();
-  loadRtspStream();
+  await loadRtspStream();
 }
 
 /** 
