@@ -70,6 +70,7 @@ const FIBARO_PASSWORD_MERAKI = process.env.FIBARO_PASSWORD_MERAKI;
 const FIBARO_USER_NAME_MERAKI = process.env.FIBARO_USER_NAME_MERAKI;
 const CAMERAIP = process.env.CAMERAIP;
 const CAMERAPORT = process.env.CAMERAPORT;
+const SOCKET_PORT = process.env.SOCKET_PORT;
 const MERAKI_API_KEY = process.env.MERAKI_API_KEY;
 const SENSORS_NUMBER = process.env.SENSORS_NUMBER;
 const SONOFF_PASSWORD = process.env.SONOFF_PASSWORD;
@@ -101,7 +102,7 @@ async function loadRtspStream(req, res, next) {
   var stream = await new Stream({
     name: 'name',
     streamUrl: `rtsp://${CAMERAIP}:${CAMERAPORT}/live`,//`rtsp://${CAMERAIP}:${CAMERAPORT}/live`,//'rtsp://192.168.128.2:9000/live'
-    wsPort: 9999,
+    wsPort: SOCKET_PORT,
     ffmpegOptions: { // options ffmpeg flags
       '-c': 'copy',
       '-f': 'segment',

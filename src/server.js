@@ -38,7 +38,7 @@ console.log('try to connect');
 module.exports = {
   server: app,
   start: (port) => {
-    const PORT = port || process.env.PORT || 4000;
+    const PORT = port || process.env.PORT || 4444;
     server.listen(PORT,'0.0.0.0', () => { console.log(`Listening on port ${PORT}`); });
   },
 };
