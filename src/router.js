@@ -96,6 +96,7 @@ var soundAlarm = false;
  * @param {obj} res 
  * @param {function} next 
  */
+var ffmpegPID='';
 async function loadRtspStream(req, res, next) {
   // await cp.exec('pkill ffmpeg', function(err, stdout, stderr) {console.log('kill error:',err);});
   var recordDuration = 120; //in sec
@@ -111,10 +112,12 @@ async function loadRtspStream(req, res, next) {
       // '-segment_format' : 'mp4',
       '-codec:v': 'libx264',
       './recorded_videos/%d-%m-%Y_%H-%M-%S.mp4': '',
-    },
+    }, 
   });
+
+  await cp.exec('pidof ffmpeg', function (err, stdout, stderr) { ffmpegPID = stdout.split(' ')[0]; console.log("ffmpegPID",stdout.split(' ')[0])});
   process.on('SIGINT', async function () {
-    await cp.exec('pkill ffmpeg', function (err, stdout, stderr) { console.log('kill error:', err); });
+    await cp.exec(`kill ${ffmpegPID}`, function (err, stdout, stderr) { console.log('kill ffmpeg done PID:', ffmpegPID); });
     process.exit(1);
   });
   // res.send('IT WORK');
@@ -132,7 +135,7 @@ async function restartStream(){
   // var cmd = 'ffmpeg...'   //for windows
   // var child = cp.exec(cmd, function(err, stdout, stderr) {})
   // child.stdin.write('q')
-  await cp.exec('killall -s KILL ffmpeg', function (err, stdout, stderr) { console.log('kill error:', err); });
+  await cp.exec(`kill ${ffmpegPID}`, function (err, stdout, stderr) { console.log('kill ffmpeg done PID:', ffmpegPID); });
   await modulecount.resetCount3();
   await loadRtspStream();
 }
