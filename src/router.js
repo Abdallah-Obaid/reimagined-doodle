@@ -117,7 +117,7 @@ async function loadRtspStream(req, res, next) {
 
   await cp.exec('pidof ffmpeg', function (err, stdout, stderr) { ffmpegPID = stdout.split(' ')[0]; console.log("ffmpegPID",stdout.split(' ')[0])});
   process.on('SIGINT', async function () {
-    await cp.exec(`kill ${ffmpegPID}`, function (err, stdout, stderr) { console.log('kill ffmpeg done PID:', ffmpegPID); });
+    await cp.exec(`kill -9 ${ffmpegPID}`, function (err, stdout, stderr) { console.log('kill ffmpeg done PID:', ffmpegPID); });
     process.exit(1);
   });
   // res.send('IT WORK');
@@ -135,7 +135,7 @@ async function restartStream(){
   // var cmd = 'ffmpeg...'   //for windows
   // var child = cp.exec(cmd, function(err, stdout, stderr) {})
   // child.stdin.write('q')
-  await cp.exec(`kill ${ffmpegPID}`, function (err, stdout, stderr) { console.log('kill ffmpeg done PID:', ffmpegPID); });
+  await cp.exec(`kill -9 ${ffmpegPID}`, function (err, stdout, stderr) { console.log('kill ffmpeg done PID:', ffmpegPID); });
   await modulecount.resetCount3();
   await loadRtspStream();
 }

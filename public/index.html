@@ -12,7 +12,7 @@
     <main class="main">
       <div style="width: 400px; height: 400px;"><canvas id="video-canvas" width="1080" height="720" style="width: 400px; height: 400px;"></canvas></div>     
       <video id="videoPlayer" controls>
-        <source src="http://192.168.2.235:4000/recordedVideo?videoName=test" type="video/mp4">
+        <source src="http://192.168.2.235:4444/recordedVideo?videoName=test" type="video/mp4">
       </video>
       <select name="record-list" id="record-list">
 
@@ -40,7 +40,7 @@
 
       })
       function requestList(){
-        var url = 'http://'+document.location.hostname+':4000/recordList'
+        var url = 'http://'+document.location.hostname+':4444/recordList'
         $.ajax({
           url: url,
           success: (data) => {
@@ -57,7 +57,7 @@
 
       $('#record-list').on('change',renderRecord)
       function renderRecord(){
-        $('#videoPlayer source').attr('src', `http://${document.location.hostname}:4000/recordedVideo?videoName=${$('#record-list').val()}`);
+        $('#videoPlayer source').attr('src', `http://${document.location.hostname}:4444/recordedVideo?videoName=${$('#record-list').val()}`);
         var video = document.getElementById('videoPlayer');
         video.load();
         video.play();
