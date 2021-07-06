@@ -86,17 +86,20 @@ VideoStream.prototype.startMpeg1Stream = function() {
   });
   return this;
 };
-
+   var WsServer;
 VideoStream.prototype.pipeStreamToSocketServer = function() {
+  // console.log("WsServerWsServerWsServerWsServerWsServer1",WsServer)
+  if(WsServer){WsServer.close()} // To check if sockect olready running and close it to open it again 
   this.wsServer = new ws.Server({
     port: this.wsPort,
     // host: "192.168.1.1"
   });
+  WsServer =this.wsServer;
   this.wsServer.on('connection', (socket, request) => {
     return this.onSocketConnect(socket, request);
   });
   this.wsServer.on('error',(error)=>{
-    // console.log('eroooooooooooooorrrrrrrrrrr',error)
+     console.log('Socket error: ',error)
   })
   this.wsServer.broadcast = function(data, opts) {
     var results;
