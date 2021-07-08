@@ -2,6 +2,7 @@
 const superagent = require('superagent');
 const SensorTypeEnum = require('../../src/enum/sensorTypeEnum.js');
 const SensorAlertSeverityEnum = require('../../src/enum/sensorAlertSeverityEnum.js');
+const { json } = require('express');
 
 // Application setup
 const CMS_URL = process.env.CMS_URL;
@@ -29,6 +30,22 @@ var alertSender= function(typeId,readingValue,readingStatus,readingDate){
     });
 };
 
+/** 
+ * This function will get the thresholds for alerts from Cms DB
+ * @param {obj} req 
+ * @param {obj} res 
+ * @param {function} next 
+ */
+async function getThresholds() {
+  var thresholdsData = await superagent.get(`${CMS_URL}/Alerts/GetAlertThresholds`)
+    .then(thresholds => {
+      return thresholds.body;
+    })
+    .catch(err => {
+      console.log('Thresholds for alert error: ', err);
+    });
+  return thresholdsData;
+}
 
 /** 
  * This function will get the dust for alert from Fibaro sensor
@@ -41,18 +58,19 @@ async function getDust() {
   superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices/${dustDeviceID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
-    .then(dustData => {
+    .then(async dustData => {
       var dustObject = {};
       var dustDatavalue = dustData.body.properties.value;
       if (dustDatavalue) {
-        if (50 >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
+        var thresholds =await getThresholds();
+        if (thresholds.dust.normal >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
-        if (50 < Number(dustDatavalue) && Number(dustDatavalue) <= 100) {
+        if (thresholds.dust.normal < Number(dustDatavalue) && Number(dustDatavalue) <= thresholds.dust.high) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.moderate;
           alertSender(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date().toUTCString());
         }
-        if (Number(dustDatavalue) > 100) {
+        if (Number(dustDatavalue) > thresholds.dust.high) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.high;
           alertSender(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date().toUTCString());
         }
@@ -81,14 +99,15 @@ async function getSmoke() {
       var co2Object = {};
       var co2Datavalue = co2Data.body.properties.value;
       if (co2Datavalue) {
-        if (1000 >= Number(co2Datavalue) && Number(co2Datavalue) >= 400) {
+        var thresholds =await getThresholds();
+        if (thresholds.co2.high  >= Number(co2Datavalue) && Number(co2Datavalue) >= thresholds.co2.low ) {
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
-        if (1000 < Number(co2Datavalue)) {
+        if (thresholds.co2.high < Number(co2Datavalue)) {
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.high;
           alertSender(SensorTypeEnum.sensorType.co2,Number(co2Datavalue),co2Object.status,new Date().toUTCString());
         }
-        if (Number(co2Datavalue) < 400) {
+        if (Number(co2Datavalue) < thresholds.co2.low) {
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.low;
           alertSender(SensorTypeEnum.sensorType.co2,Number(co2Datavalue),co2Object.status,new Date().toUTCString());
         }
@@ -112,18 +131,19 @@ async function getTemperatureMeraki() {
   superagent.get(`https://api.meraki.com/api/v1/networks/${MERAKI_NETWORK_ID}/sensors/stats/latestBySensor?metric=${metric}&serial=${deviceSerial}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
-    .then(temperatureData => {
+    .then(async temperatureData => {
       var temperatureObject = {};
       var temperatureDatavalue = temperatureData.body[0].value;
       if (temperatureDatavalue || temperatureDatavalue == 0) {
-        if (27 >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= 20) {
+        var thresholds =await getThresholds();
+        if (thresholds.temperature.high >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= thresholds.temperature.low) {
           temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
-        if (27 < Number(temperatureDatavalue)) {
+        if (thresholds.temperature.high < Number(temperatureDatavalue)) {
           temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.high;
           alertSender(SensorTypeEnum.sensorType.temperature,Number(temperatureDatavalue),temperatureObject.status,new Date().toUTCString());
         }
-        if (Number(temperatureDatavalue) < 20) {
+        if (Number(temperatureDatavalue) < thresholds.temperature.low) {
           temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.low;
           alertSender(SensorTypeEnum.sensorType.temperature,Number(temperatureDatavalue),temperatureObject.status,new Date().toUTCString());
         }
@@ -146,18 +166,19 @@ async function getHumidityMeraki() {
   superagent.get(`https://api.meraki.com/api/v1/networks/${MERAKI_NETWORK_ID}/sensors/stats/latestBySensor?metric=${metric}&serial=${deviceSerial}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
-    .then(humidityData => {
+    .then(async humidityData => {
       var humidityObject = {};
       var humidityDatavalue = humidityData.body[0].value;
       if (humidityDatavalue || humidityDatavalue == 0) {
-        if (50 >= Number(humidityDatavalue) && Number(humidityDatavalue) >= 30) {
+        var thresholds =await getThresholds();
+        if (thresholds.humidity.high >= Number(humidityDatavalue) && Number(humidityDatavalue) >= thresholds.humidity.low) {
           humidityObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
-        if (50 < Number(humidityDatavalue)) {
+        if (thresholds.humidity.high < Number(humidityDatavalue)) {
           humidityObject.status=SensorAlertSeverityEnum.alertSeverity.high;
           alertSender(SensorTypeEnum.sensorType.humidity,Number(humidityDatavalue),humidityObject.status,new Date().toUTCString()); 
         }
-        if (Number(humidityDatavalue) < 30) {
+        if (Number(humidityDatavalue) < thresholds.humidity.low) {
           humidityObject.status=SensorAlertSeverityEnum.alertSeverity.low;
           alertSender(SensorTypeEnum.sensorType.humidity,Number(humidityDatavalue),humidityObject.status,new Date().toUTCString()); 
         }
