@@ -15,6 +15,10 @@ const ALERT_CHECK_INTERVAL = process.env.ALERT_CHECK_INTERVAL;
 
 // Global vars
 var alerts = {};
+var defualtTempStatus = 'normal';
+var defualtHumStatus  = 'normal';
+var defualtCo2Status  = 'normal';
+var defualtDustStatus = 'normal';
 
 var alertSender= function(typeId,readingValue,readingStatus,readingDate){
   superagent.post(`${CMS_URL}/Alerts/SaveAlert`)
@@ -66,11 +70,13 @@ async function getDust() {
         if (thresholds.dust.normal >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
-        if (thresholds.dust.normal < Number(dustDatavalue) && Number(dustDatavalue) <= thresholds.dust.high) {
-          dustObject.status=SensorAlertSeverityEnum.alertSeverity.moderate;
+        if (thresholds.dust.normal < Number(dustDatavalue) && Number(dustDatavalue) <= thresholds.dust.high && (defualtDustStatus=='normal'||defualtDustStatus=='high')) {
+          defualtDustStatus='moderate';
+          dustObject.status=SensorAlertSeverityEnum.alertSeverity.medium;
           alertSender(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date().toUTCString());
         }
-        if (Number(dustDatavalue) > thresholds.dust.high) {
+        if (Number(dustDatavalue) > thresholds.dust.high && (defualtDustStatus=='normal'||defualtDustStatus=='moderate')) {
+          defualtDustStatus='high';
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.high;
           alertSender(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date().toUTCString());
         }
@@ -103,11 +109,13 @@ async function getSmoke() {
         if (thresholds.co2.high  >= Number(co2Datavalue) && Number(co2Datavalue) >= thresholds.co2.low ) {
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
-        if (thresholds.co2.high < Number(co2Datavalue)) {
+        if (thresholds.co2.high < Number(co2Datavalue) && (defualtCo2Status=='normal'||defualtCo2Status=='low')) {
+          defualtCo2Status='high';
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.high;
           alertSender(SensorTypeEnum.sensorType.co2,Number(co2Datavalue),co2Object.status,new Date().toUTCString());
         }
-        if (Number(co2Datavalue) < thresholds.co2.low) {
+        if (Number(co2Datavalue) < thresholds.co2.low && (defualtCo2Status=='normal'||defualtCo2Status=='high')) {
+          defualtCo2Status='low';
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.low;
           alertSender(SensorTypeEnum.sensorType.co2,Number(co2Datavalue),co2Object.status,new Date().toUTCString());
         }
@@ -139,11 +147,13 @@ async function getTemperatureMeraki() {
         if (thresholds.temperature.high >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= thresholds.temperature.low) {
           temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
-        if (thresholds.temperature.high < Number(temperatureDatavalue)) {
+        if (thresholds.temperature.high < Number(temperatureDatavalue) && (defualtTempStatus=='normal'||defualtTempStatus=='low')) {
+          defualtTempStatus= 'high';
           temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.high;
           alertSender(SensorTypeEnum.sensorType.temperature,Number(temperatureDatavalue),temperatureObject.status,new Date().toUTCString());
         }
-        if (Number(temperatureDatavalue) < thresholds.temperature.low) {
+        if (Number(temperatureDatavalue) < thresholds.temperature.low && (defualtTempStatus=='normal'||defualtTempStatus=='high')) {
+          defualtTempStatus= 'low';
           temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.low;
           alertSender(SensorTypeEnum.sensorType.temperature,Number(temperatureDatavalue),temperatureObject.status,new Date().toUTCString());
         }
@@ -174,11 +184,13 @@ async function getHumidityMeraki() {
         if (thresholds.humidity.high >= Number(humidityDatavalue) && Number(humidityDatavalue) >= thresholds.humidity.low) {
           humidityObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
-        if (thresholds.humidity.high < Number(humidityDatavalue)) {
+        if (thresholds.humidity.high < Number(humidityDatavalue) && (defualtHumStatus=='normal'||defualtHumStatus=='low')) {
+          defualtHumStatus= 'high';
           humidityObject.status=SensorAlertSeverityEnum.alertSeverity.high;
           alertSender(SensorTypeEnum.sensorType.humidity,Number(humidityDatavalue),humidityObject.status,new Date().toUTCString()); 
         }
-        if (Number(humidityDatavalue) < thresholds.humidity.low) {
+        if (Number(humidityDatavalue) < thresholds.humidity.low && (defualtHumStatus=='normal'||defualtHumStatus=='high')) {
+          defualtHumStatus= 'low';
           humidityObject.status=SensorAlertSeverityEnum.alertSeverity.low;
           alertSender(SensorTypeEnum.sensorType.humidity,Number(humidityDatavalue),humidityObject.status,new Date().toUTCString()); 
         }
