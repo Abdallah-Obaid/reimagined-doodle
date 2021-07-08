@@ -68,6 +68,7 @@ async function getDust() {
       if (dustDatavalue) {
         var thresholds =await getThresholds();
         if (thresholds.dust.normal >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
+          defualtDustStatus='normal';
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
         if (thresholds.dust.normal < Number(dustDatavalue) && Number(dustDatavalue) <= thresholds.dust.high && (defualtDustStatus=='normal'||defualtDustStatus=='high')) {
@@ -107,6 +108,7 @@ async function getSmoke() {
       if (co2Datavalue) {
         var thresholds =await getThresholds();
         if (thresholds.co2.high  >= Number(co2Datavalue) && Number(co2Datavalue) >= thresholds.co2.low ) {
+          defualtCo2Status='normal';
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
         if (thresholds.co2.high < Number(co2Datavalue) && (defualtCo2Status=='normal'||defualtCo2Status=='low')) {
@@ -145,6 +147,7 @@ async function getTemperatureMeraki() {
       if (temperatureDatavalue || temperatureDatavalue == 0) {
         var thresholds =await getThresholds();
         if (thresholds.temperature.high >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= thresholds.temperature.low) {
+          defualtTempStatus= 'normal';
           temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
         if (thresholds.temperature.high < Number(temperatureDatavalue) && (defualtTempStatus=='normal'||defualtTempStatus=='low')) {
@@ -183,6 +186,7 @@ async function getHumidityMeraki() {
         var thresholds =await getThresholds();
         if (thresholds.humidity.high >= Number(humidityDatavalue) && Number(humidityDatavalue) >= thresholds.humidity.low) {
           humidityObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
+          defualtHumStatus= 'normal';
         }
         if (thresholds.humidity.high < Number(humidityDatavalue) && (defualtHumStatus=='normal'||defualtHumStatus=='low')) {
           defualtHumStatus= 'high';
