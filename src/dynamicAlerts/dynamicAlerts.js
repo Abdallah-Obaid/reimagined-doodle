@@ -55,11 +55,11 @@ async function getDust() {
       var dustDatavalue = dustData.body.properties.value;
       if (dustDatavalue) {
         var thresholds =await helper.getThresholds();
-        if (thresholds.dust.normal >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
+        if (thresholds.dust.low >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
           defualtDustStatus='normal';
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
-        if (thresholds.dust.normal < Number(dustDatavalue) && Number(dustDatavalue) <= thresholds.dust.high && (defualtDustStatus=='normal'||defualtDustStatus=='high')) {
+        if (thresholds.dust.low < Number(dustDatavalue) && Number(dustDatavalue) <= thresholds.dust.high && (defualtDustStatus=='normal'||defualtDustStatus=='high')) {
           defualtDustStatus='moderate';
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.medium;
           alertSender(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date().toUTCString());
@@ -210,18 +210,18 @@ async function getWaterLeakTest() {
   
       var waterLeakObject = {};
       if(waterLeakData.body[0]){
-      var waterLeakDatavalue = waterLeakData.body[0].value;
-      if (waterLeakDatavalue || waterLeakDatavalue == 0 ) {
-        console.log('waterLeakDatavalue',waterLeakDatavalue);
-        if (Number(waterLeakDatavalue) == 0) {
-          waterLeakObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
-        }else{
-          waterLeakObject.status=SensorAlertSeverityEnum.alertSeverity.leak;
-          alertSender(SensorTypeEnum.sensorType.waterLeak,Number(waterLeakDatavalue),waterLeakObject.status,new Date().toUTCString());
+        var waterLeakDatavalue = waterLeakData.body[0].value;
+        if (waterLeakDatavalue || waterLeakDatavalue == 0 ) {
+          console.log('waterLeakDatavalue',waterLeakDatavalue);
+          if (Number(waterLeakDatavalue) == 0) {
+            waterLeakObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
+          }else{
+            waterLeakObject.status=SensorAlertSeverityEnum.alertSeverity.leak;
+            alertSender(SensorTypeEnum.sensorType.waterLeak,Number(waterLeakDatavalue),waterLeakObject.status,new Date().toUTCString());
+          }
+          waterLeakObject.value=waterLeakDatavalue;
         }
-        waterLeakObject.value=waterLeakDatavalue;
       }
-    }
     })
     .catch(err => {
       console.log('WaterLeak alert sensor error: ', err);

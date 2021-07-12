@@ -46,10 +46,10 @@ async function getDust() {
       var dustDatavalue = dustData.body.properties.value;
       if (dustDatavalue || dustDatavalue == 0) {
         var thresholds =await helper.getThresholds();
-        if (thresholds.dust.normal >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
+        if (thresholds.dust.low >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
-        if (thresholds.dust.normal < Number(dustDatavalue) && Number(dustDatavalue) <= thresholds.dust.high) {
+        if (thresholds.dust.low < Number(dustDatavalue) && Number(dustDatavalue) <= thresholds.dust.high) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.moderate;
         }
         if (Number(dustDatavalue) > thresholds.dust.high) {
