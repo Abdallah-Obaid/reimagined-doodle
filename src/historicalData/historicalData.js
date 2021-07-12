@@ -2,6 +2,7 @@
 const superagent = require('superagent');
 const SensorTypeEnum = require('../../src/enum/sensorTypeEnum.js');
 const SensorAlertSeverityEnum = require('../../src/enum/sensorAlertSeverityEnum.js');
+const helper = require('../../helper.js');
 
 // Application setup
 const CMS_URL = process.env.CMS_URL;
@@ -9,7 +10,11 @@ const IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI =  process.env.IP_ADDRESS_FOR_FIBARO_
 const FIBARO_PASSWORD_MERAKI = process.env.FIBARO_PASSWORD_MERAKI;
 const FIBARO_USER_NAME_MERAKI = process.env.FIBARO_USER_NAME_MERAKI;
 const HISTORICAL_DATA_INTERVAL = process.env.HISTORICAL_DATA_INTERVAL;
-
+const CO2_SENSOR_ID = process.env.CO2_SENSOR_ID;
+const DUST_SENSOR_ID = process.env.DUST_SENSOR_ID;
+const AMPERE_SENSOR_ID = process.env.AMPERE_SENSOR_ID;
+const VOLT_SENSOR_ID = process.env.VOLT_SENSOR_ID;
+const WATT_SENSOR_ID = process.env.WATT_SENSOR_ID;
 
 // Global vars
 var historicalData={};
@@ -32,21 +37,22 @@ var historicalDataGenerator= function(typeId,readingValue,readingStatus,readingD
  * @param {function} next 
  */
 async function getDust() {
-  var dustDeviceID = 46;
+  var dustDeviceID = DUST_SENSOR_ID;
   superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices/${dustDeviceID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
-    .then(dustData => {
+    .then(async dustData => {
       var dustObject = {};
       var dustDatavalue = dustData.body.properties.value;
-      if (dustDatavalue) {
-        if (50 >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
+      if (dustDatavalue || dustDatavalue == 0) {
+        var thresholds =await helper.getThresholds();
+        if (thresholds.dust.normal >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
-        if (50 < Number(dustDatavalue) && Number(dustDatavalue) <= 100) {
+        if (thresholds.dust.normal < Number(dustDatavalue) && Number(dustDatavalue) <= thresholds.dust.high) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.moderate;
         }
-        if (Number(dustDatavalue) > 100) {
+        if (Number(dustDatavalue) > thresholds.dust.high) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.high;
         }
         historicalDataGenerator(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date().toUTCString());
@@ -68,21 +74,22 @@ async function getDust() {
  * @param {function} next 
  */
 async function getSmoke() {
-  var co2DeviceID = 44;
+  var co2DeviceID = CO2_SENSOR_ID;
   superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices/${co2DeviceID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
     .then(async co2Data => {
       var co2Object = {};
       var co2Datavalue = co2Data.body.properties.value;
-      if (co2Datavalue) {
-        if (1000 >= Number(co2Datavalue) && Number(co2Datavalue) >= 400) {
+      if (co2Datavalue ||co2Datavalue == 0) {
+        var thresholds =await helper.getThresholds();
+        if (thresholds.co2.high >= Number(co2Datavalue) && Number(co2Datavalue) >= thresholds.co2.low) {
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
-        if (1000 < Number(co2Datavalue)) {
+        if (thresholds.co2.high < Number(co2Datavalue)) {
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.high;
         }
-        if (Number(co2Datavalue) < 400) {
+        if (Number(co2Datavalue) < thresholds.co2.low) {
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.low;
         }
         historicalDataGenerator(SensorTypeEnum.sensorType.co2,Number(co2Datavalue),co2Object.status,new Date().toUTCString());
@@ -102,9 +109,9 @@ async function getSmoke() {
  * @param {function} next 
  */
 async function getPower() {
-  var powerDeviceID = 58;
-  var powerDeviceIDAmpere = 70;
-  var powerDeviceIDVolt = 69;
+  var powerDeviceID = WATT_SENSOR_ID;
+  var powerDeviceIDAmpere = AMPERE_SENSOR_ID;
+  var powerDeviceIDVolt = VOLT_SENSOR_ID;
   var powerObject = {};
   powerObject.value={};
   superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices?parentId=${powerDeviceID}`)

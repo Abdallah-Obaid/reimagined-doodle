@@ -2,7 +2,7 @@
 const superagent = require('superagent');
 const SensorTypeEnum = require('../../src/enum/sensorTypeEnum.js');
 const SensorAlertSeverityEnum = require('../../src/enum/sensorAlertSeverityEnum.js');
-const { json } = require('express');
+const helper = require('../../helper.js');
 
 // Application setup
 const CMS_URL = process.env.CMS_URL;
@@ -12,6 +12,11 @@ const FIBARO_USER_NAME_MERAKI = process.env.FIBARO_USER_NAME_MERAKI;
 const MERAKI_API_KEY = process.env.MERAKI_API_KEY;
 const MERAKI_NETWORK_ID = process.env.MERAKI_NETWORK_ID;
 const ALERT_CHECK_INTERVAL = process.env.ALERT_CHECK_INTERVAL;
+const CO2_SENSOR_ID = process.env.CO2_SENSOR_ID;
+const DUST_SENSOR_ID = process.env.DUST_SENSOR_ID;
+const TEMPERATURE_SENSOR_SERIAL = process.env.TEMPERATURE_SENSOR_SERIAL;
+const HUMIDITY_SENSOR_ID = process.env.HUMIDITY_SENSOR_ID;
+const WATERLEAK_SENSOR_ID = process.env.WATERLEAK_SENSOR_ID;
 
 // Global vars
 var alerts = {};
@@ -35,30 +40,13 @@ var alertSender= function(typeId,readingValue,readingStatus,readingDate){
 };
 
 /** 
- * This function will get the thresholds for alerts from Cms DB
- * @param {obj} req 
- * @param {obj} res 
- * @param {function} next 
- */
-async function getThresholds() {
-  var thresholdsData = await superagent.get(`${CMS_URL}/Alerts/GetAlertThresholds`)
-    .then(thresholds => {
-      return thresholds.body;
-    })
-    .catch(err => {
-      console.log('Thresholds for alert error: ', err);
-    });
-  return thresholdsData;
-}
-
-/** 
  * This function will get the dust for alert from Fibaro sensor
  * @param {obj} req 
  * @param {obj} res 
  * @param {function} next 
  */
 async function getDust() {
-  var dustDeviceID = 46;
+  var dustDeviceID = DUST_SENSOR_ID;
   superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices/${dustDeviceID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
@@ -66,7 +54,7 @@ async function getDust() {
       var dustObject = {};
       var dustDatavalue = dustData.body.properties.value;
       if (dustDatavalue) {
-        var thresholds =await getThresholds();
+        var thresholds =await helper.getThresholds();
         if (thresholds.dust.normal >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
           defualtDustStatus='normal';
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
@@ -98,7 +86,7 @@ async function getDust() {
  * @param {function} next 
  */
 async function getSmoke() {
-  var co2DeviceID = 44;
+  var co2DeviceID = CO2_SENSOR_ID;
   superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices/${co2DeviceID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
@@ -106,7 +94,7 @@ async function getSmoke() {
       var co2Object = {};
       var co2Datavalue = co2Data.body.properties.value;
       if (co2Datavalue) {
-        var thresholds =await getThresholds();
+        var thresholds =await helper.getThresholds();
         if (thresholds.co2.high  >= Number(co2Datavalue) && Number(co2Datavalue) >= thresholds.co2.low ) {
           defualtCo2Status='normal';
           co2Object.status=SensorAlertSeverityEnum.alertSeverity.normal;
@@ -136,7 +124,7 @@ async function getSmoke() {
  * @param {function} next 
  */
 async function getTemperatureMeraki() {
-  var deviceSerial = 'Q3CA-2DY2-LG4W';
+  var deviceSerial = TEMPERATURE_SENSOR_SERIAL;
   var metric = 'temperature';
   superagent.get(`https://api.meraki.com/api/v1/networks/${MERAKI_NETWORK_ID}/sensors/stats/latestBySensor?metric=${metric}&serial=${deviceSerial}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
@@ -145,7 +133,7 @@ async function getTemperatureMeraki() {
       var temperatureObject = {};
       var temperatureDatavalue = temperatureData.body[0].value;
       if (temperatureDatavalue || temperatureDatavalue == 0) {
-        var thresholds =await getThresholds();
+        var thresholds =await helper.getThresholds();
         if (thresholds.temperature.high >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= thresholds.temperature.low) {
           defualtTempStatus= 'normal';
           temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
@@ -174,7 +162,7 @@ async function getTemperatureMeraki() {
  * @param {function} next 
  */
 async function getHumidityMeraki() {
-  var deviceSerial = 'Q3CA-2DY2-LG4W';
+  var deviceSerial = HUMIDITY_SENSOR_ID;
   var metric = 'humidity';
   superagent.get(`https://api.meraki.com/api/v1/networks/${MERAKI_NETWORK_ID}/sensors/stats/latestBySensor?metric=${metric}&serial=${deviceSerial}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
@@ -183,7 +171,7 @@ async function getHumidityMeraki() {
       var humidityObject = {};
       var humidityDatavalue = humidityData.body[0].value;
       if (humidityDatavalue || humidityDatavalue == 0) {
-        var thresholds =await getThresholds();
+        var thresholds =await helper.getThresholds();
         if (thresholds.humidity.high >= Number(humidityDatavalue) && Number(humidityDatavalue) >= thresholds.humidity.low) {
           humidityObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
           defualtHumStatus= 'normal';
@@ -213,7 +201,7 @@ async function getHumidityMeraki() {
  * @param {function} next 
  */
 async function getWaterLeakTest() {
-  var deviceSerial = 'Q3CB-F4C4-L9SF';
+  var deviceSerial = WATERLEAK_SENSOR_ID;
   var metric = 'water_detection';
   superagent.get(`https://api.meraki.com/api/v1/networks/${MERAKI_NETWORK_ID}/sensors/stats/latestBySensor?metric=${metric}&serial=${deviceSerial}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')

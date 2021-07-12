@@ -1,7 +1,7 @@
 'use strict';
 
 var MqttTester  = require('../mqtt');
-var helper  = require('../helper');
+var helper  = require('../helper.js');
 const superagent = require('superagent');
 const ewelink = require('ewelink-api'); // For Ac switch
 const express = require('express');
@@ -252,17 +252,18 @@ async function getDust(req, res, next) {
   superagent.get(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices/${dustDeviceID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
-    .then(dustData => {
+    .then(async dustData => {
       var dustObject = {};
       var dustDatavalue = dustData.body.properties.value;
-      if (dustDatavalue) {
-        if (50 >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
+      if (dustDatavalue || dustDatavalue == 0) {
+        var thresholds =await helper.getThresholds();
+        if (thresholds.dust.normal >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
           dustObject.status=ThresholdsEnum.dust.normal;
         }
-        if (50 < Number(dustDatavalue) && Number(dustDatavalue) <= 100) {
+        if (thresholds.dust.normal < Number(dustDatavalue) && Number(dustDatavalue) <= thresholds.dust.high) {
           dustObject.status=ThresholdsEnum.dust.moderate;
         }
-        if (Number(dustDatavalue) > 100) {
+        if (Number(dustDatavalue) > thresholds.dust.high) {
           dustObject.status=ThresholdsEnum.dust.high;
         }
         dustObject.value=dustDatavalue;
@@ -315,14 +316,15 @@ async function getCo2(req, res, next) {
     .then(async co2Data => {
       var co2Object = {};
       var co2Datavalue = co2Data.body.properties.value;
-      if (co2Datavalue) {
-        if (1000 >= Number(co2Datavalue) && Number(co2Datavalue) >= 400) {
+      if (co2Datavalue || co2Datavalue == 0) {
+        var thresholds =await helper.getThresholds();
+        if (thresholds.co2.high >= Number(co2Datavalue) && Number(co2Datavalue) >= thresholds.co2.low) {
           co2Object.status=ThresholdsEnum.co2.normal;
         }
-        if (1000 < Number(co2Datavalue)) {
+        if (thresholds.co2.high < Number(co2Datavalue)) {
           co2Object.status=ThresholdsEnum.co2.high;
         }
-        if (Number(co2Datavalue) < 400) {
+        if (Number(co2Datavalue) < thresholds.co2.low) {
           co2Object.status=ThresholdsEnum.co2.low;
         }
         co2Object.value=co2Datavalue;
@@ -560,17 +562,18 @@ async function getTemperatureMeraki(req, res, next) {
   superagent.get(`https://api.meraki.com/api/v1/networks/${merakiNetworkID}/sensors/stats/latestBySensor?metric=${metric}&serial=${deviceSerial}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
-    .then(temperatureData => {
+    .then(async temperatureData => {
       var temperatureObject = {};
       var temperatureDatavalue = temperatureData.body[0].value;
       if (temperatureDatavalue || temperatureDatavalue == 0) {
-        if (27 >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= 20) {
+        var thresholds =await helper.getThresholds();
+        if (thresholds.temperature.high >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= thresholds.temperature.low) {
           temperatureObject.status=ThresholdsEnum.temperature.normal;
         }
-        if (27 < Number(temperatureDatavalue)) {
+        if (thresholds.temperature.high < Number(temperatureDatavalue)) {
           temperatureObject.status=ThresholdsEnum.temperature.high;
         }
-        if (Number(temperatureDatavalue) < 20) {
+        if (Number(temperatureDatavalue) < thresholds.temperature.low) {
           temperatureObject.status=ThresholdsEnum.temperature.low;
         }
         temperatureObject.value=temperatureDatavalue;
@@ -626,17 +629,18 @@ async function getHumidityMeraki(req, res, next) {
   superagent.get(`https://api.meraki.com/api/v1/networks/${merakiNetworkID}/sensors/stats/latestBySensor?metric=${metric}&serial=${deviceSerial}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
-    .then(humidityData => {
+    .then(async humidityData => {
       var humidityObject = {};
       var humidityDatavalue = humidityData.body[0].value;
       if (humidityDatavalue || humidityDatavalue == 0) {
-        if (50 >= Number(humidityDatavalue) && Number(humidityDatavalue) >= 30) {
+        var thresholds =await helper.getThresholds();
+        if (thresholds.humidity.high >= Number(humidityDatavalue) && Number(humidityDatavalue) >= thresholds.humidity.low) {
           humidityObject.status=ThresholdsEnum.humidity.normal;
         }
-        if (50 < Number(humidityDatavalue)) {
+        if (thresholds.humidity.high < Number(humidityDatavalue)) {
           humidityObject.status=ThresholdsEnum.humidity.high;
         }
-        if (Number(humidityDatavalue) < 30) {
+        if (Number(humidityDatavalue) < thresholds.humidity.low) {
           humidityObject.status=ThresholdsEnum.humidity.low;
         }
         humidityObject.value=humidityDatavalue;
