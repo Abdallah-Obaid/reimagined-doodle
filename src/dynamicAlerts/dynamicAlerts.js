@@ -209,6 +209,7 @@ async function getWaterLeakTest() {
     .then(waterLeakData => {
   
       var waterLeakObject = {};
+      if(waterLeakData.body[0]){
       var waterLeakDatavalue = waterLeakData.body[0].value;
       if (waterLeakDatavalue || waterLeakDatavalue == 0 ) {
         console.log('waterLeakDatavalue',waterLeakDatavalue);
@@ -220,6 +221,7 @@ async function getWaterLeakTest() {
         }
         waterLeakObject.value=waterLeakDatavalue;
       }
+    }
     })
     .catch(err => {
       console.log('WaterLeak alert sensor error: ', err);
