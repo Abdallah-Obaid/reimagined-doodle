@@ -11,8 +11,8 @@ const fs = require('fs');
 const path = require('path');// to remove .mp4 from file name
 var modulecount = require('./lib/mpeg1muxer');
 var Stream = require('./lib/videoStream');
-const { json } = require('express');
-const { error } = require('console');
+const SensorTypeEnum = require('../src/enum/sensorTypeEnum');
+const SensorActionEnum = require('../src/enum/sensorActionEnum');
 const ThresholdsEnum = require('../src/enum/thresholdsEnum');
 var DynamicAlerts  = require('./dynamicAlerts/dynamicAlerts');
 var HistoricalData  = require('./historicalData/historicalData');
@@ -70,6 +70,7 @@ const FIBARO_PASSWORD_MERAKI = process.env.FIBARO_PASSWORD_MERAKI;
 const FIBARO_USER_NAME_MERAKI = process.env.FIBARO_USER_NAME_MERAKI;
 const CAMERAIP = process.env.CAMERAIP;
 const CAMERAPORT = process.env.CAMERAPORT;
+const RECORDING_DIRECTORY = process.env.RECORDING_DIRECTORY;
 const SOCKET_PORT = process.env.SOCKET_PORT;
 const MERAKI_API_KEY = process.env.MERAKI_API_KEY;
 const SENSORS_NUMBER = process.env.SENSORS_NUMBER;
@@ -111,7 +112,7 @@ async function loadRtspStream(req, res, next) {
       '-segment_time': `${recordDuration}`,
       // '-segment_format' : 'mp4',
       '-codec:v': 'libx264',
-      './recorded_videos/%d-%m-%Y_%H-%M-%S.mp4': '',
+      [RECORDING_DIRECTORY]: '',
     }, 
   });
 
@@ -450,13 +451,21 @@ async function checkSwitchStatus(req, res, next) {
 async function postPowerSwitch(req, res, next) {
   var PostPowerSwitchID = req.query.deviceID;
   var actionName = req.query.actionName;
+  var userId = req.query.userId;
+  var roomId = req.query.roomId;
+  var buildingId = req.query.buildingId;
   superagent.post(`http://${IP_ADDRESS_FOR_FIBARO_SENSORS_MERAKI}/api/devices/${PostPowerSwitchID}/action/${actionName}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .auth(FIBARO_USER_NAME_MERAKI, FIBARO_PASSWORD_MERAKI)
     .then(PostPowerSwitch => {
 
-      // console.log('PostPowerSwitch', PostPowerSwitch.body.result);
-      if (PostPowerSwitch.body.result) { res.status(200).send(PostPowerSwitch.body.result); } else { res.status(200).send([]); }
+      console.log('PostPowerSwitch', PostPowerSwitch.body.result);
+      if (PostPowerSwitch.body.result) {
+        if(actionName=='turnOn') {helper.switchLogGenerator(SensorTypeEnum.sensorType.lightSwitch,SensorActionEnum.actionID.on,userId,roomId,buildingId);}
+        if(actionName=='turnOff'){helper.switchLogGenerator(SensorTypeEnum.sensorType.lightSwitch,SensorActionEnum.actionID.off,userId,roomId,buildingId);}
+
+        res.status(200).send(PostPowerSwitch.body.result); 
+      } else { res.status(200).send([]); }
 
     })
     .catch(err => {
@@ -503,6 +512,9 @@ async function checkAcSwitchStatus(req, res, next) {
  */
 async function SwitchAcSwitchSonOff(req, res, next) {
   var  switchAcSwitchID = req.query.deviceID;
+  var userId = req.query.userId;
+  var roomId = req.query.roomId;
+  var buildingId = req.query.buildingId;
   var acSwitchObject={};
   const connection = new ewelink({
     email: SONOFF_EMAIL,
@@ -510,13 +522,11 @@ async function SwitchAcSwitchSonOff(req, res, next) {
     region: 'as',
   });
   try {
-    const switchStatus = await connection.toggleDevice(switchAcSwitchID);
-    if (switchStatus.state == 'on'){
+    const switchStatus = await connection.toggleDevice(switchAcSwitchID);    if (switchStatus.status == 'ok'){
       acSwitchObject.status = ThresholdsEnum.acControl.on;
-    }else if (switchStatus.state == 'off'){
-      acSwitchObject.status = ThresholdsEnum.acControl.off;
+      helper.switchLogGenerator(SensorTypeEnum.sensorType.acSwitch,SensorActionEnum.actionID.on,userId,roomId,buildingId);
     }
-    acSwitchObject.value = switchStatus.state;
+    acSwitchObject.value = switchStatus.status;
     res.status(200).send(acSwitchObject);
   }
   catch(err) {
@@ -534,14 +544,19 @@ async function SwitchAcSwitchSonOff(req, res, next) {
 async function openDoorSwitch(req, res, next) {
   var doorID = req.query.doorID;
   var actionName = req.query.actionName;
+  var userId = req.query.userId;
+  var roomId = req.query.roomId;
+  var buildingId = req.query.buildingId;
+
   superagent.get(`http://${IP_ADDRESS_FOR_AKUVOX_DOOR_PHONE}/fcgi/do?action=${actionName}&DoorNum=${doorID}`)
     .set('Content-Type', 'application/x-www-form-urlencoded')
     .auth(FIBARO_USER_NAME, FIBARO_PASSWORD)
     .then(openDoorSwitch => {
 
       // console.log('openDoorSwitch', openDoorSwitch.body);
-      if (openDoorSwitch.body) { res.status(200).send(openDoorSwitch.body); } else { res.status(200).send([]); }
-
+      if (openDoorSwitch.body) { 
+        helper.switchLogGenerator(SensorTypeEnum.sensorType.door,SensorActionEnum.actionID.on,userId,roomId,buildingId);
+        res.status(200).send(openDoorSwitch.body); } else { res.status(200).send([]); }
     })
     .catch(err => {
       console.log('Door switch sensor error: ', err);

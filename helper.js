@@ -31,4 +31,23 @@ helper.getThresholds= async function() {
     });
   return thresholdsData;
 };
+
+/** 
+ * This function will send switch logs to DB
+ * @param {obj} req 
+ * @param {obj} res 
+ * @param {function} next 
+ */
+
+helper.switchLogGenerator= function(typeId,actionId,userId,roomId,buildingId){
+  superagent.post(`${CMS_URL}/Dashboard/SaveLog`)
+    .send({ TypeId: typeId, ActionId: actionId,ActionUserId:userId,VenueId:roomId,CampusId:buildingId })
+    // .set('Content-Type', 'application/x-www-form-urlencoded')
+    .then(done => {
+      console.log('Log generated: ',typeId);
+    })
+    .catch(err => {
+      console.log('Log generator error: ', err);
+    });
+};
 module.exports = helper;
