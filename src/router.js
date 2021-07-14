@@ -80,7 +80,7 @@ console.log(FIBARO_PASSWORD , FIBARO_USER_NAME );
 
 // Direct calls
 
-// getSmokeThreshold();
+getSmokeThreshold();
 loadRtspStream();
 rtspStreamRestarting();
 runMqtt();
@@ -257,11 +257,11 @@ async function getDust(req, res, next) {
       var dustObject = {};
       var dustDatavalue = dustData.body.properties.value;
       if (dustDatavalue || dustDatavalue == 0) {
-        var thresholds =await helper.getThresholds();// for dust low = moderate
-        if (thresholds.dust.low >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
+        var thresholds =await helper.getThresholds();// for dust normal = moderate
+        if (thresholds.dust.normal >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
           dustObject.status=ThresholdsEnum.dust.normal;
         }
-        if (thresholds.dust.low < Number(dustDatavalue) && Number(dustDatavalue) <= thresholds.dust.high) {
+        if (thresholds.dust.normal < Number(dustDatavalue) && Number(dustDatavalue) <= thresholds.dust.high) {
           dustObject.status=ThresholdsEnum.dust.moderate;
         }
         if (Number(dustDatavalue) > thresholds.dust.high) {
