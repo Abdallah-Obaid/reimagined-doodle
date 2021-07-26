@@ -1,7 +1,7 @@
 'use strict';
 
 var MqttTester  = require('../mqtt');
-var helper  = require('../helper.js');
+var helpers  = require('../helpers.js');
 const superagent = require('superagent');
 const ewelink = require('ewelink-api'); // For Ac switch
 const express = require('express');
@@ -80,7 +80,7 @@ console.log(FIBARO_PASSWORD , FIBARO_USER_NAME );
 
 // Direct calls
 
-getSmokeThreshold();
+// getSmokeThreshold();
 loadRtspStream();
 rtspStreamRestarting();
 runMqtt();
@@ -257,7 +257,7 @@ async function getDust(req, res, next) {
       var dustObject = {};
       var dustDatavalue = dustData.body.properties.value;
       if (dustDatavalue || dustDatavalue == 0) {
-        var thresholds =await helper.getThresholds();// for dust normal = moderate
+        var thresholds =await helpers.getThresholds();// for dust normal = moderate
         if (thresholds.dust.normal >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
           dustObject.status=ThresholdsEnum.dust.normal;
         }
@@ -318,7 +318,7 @@ async function getCo2(req, res, next) {
       var co2Object = {};
       var co2Datavalue = co2Data.body.properties.value;
       if (co2Datavalue || co2Datavalue == 0) {
-        var thresholds =await helper.getThresholds();
+        var thresholds =await helpers.getThresholds();
         if (thresholds.co2.high >= Number(co2Datavalue) && Number(co2Datavalue) >= thresholds.co2.low) {
           co2Object.status=ThresholdsEnum.co2.normal;
         }
@@ -461,8 +461,15 @@ async function postPowerSwitch(req, res, next) {
 
       console.log('PostPowerSwitch', PostPowerSwitch.body.result);
       if (PostPowerSwitch.body.result) {
-        if(actionName=='turnOn') {helper.switchLogGenerator(SensorTypeEnum.sensorType.lightSwitch,SensorActionEnum.actionID.on,userId,roomId,buildingId);}
-        if(actionName=='turnOff'){helper.switchLogGenerator(SensorTypeEnum.sensorType.lightSwitch,SensorActionEnum.actionID.off,userId,roomId,buildingId);}
+        if(actionName=='turnOn') {
+          helpers.switchLogGenerator(SensorTypeEnum.sensorType.lightSwitch,SensorActionEnum.actionID.on,userId,roomId,buildingId);
+          helpers.historicalDataGenerator(SensorTypeEnum.sensorType.lightSwitch,Number(SensorActionEnum.actionID.on),SensorActionEnum.actionID.on,new Date().toUTCString());
+
+        }
+        if(actionName=='turnOff'){
+          helpers.switchLogGenerator(SensorTypeEnum.sensorType.lightSwitch,SensorActionEnum.actionID.off,userId,roomId,buildingId);
+          helpers.historicalDataGenerator(SensorTypeEnum.sensorType.lightSwitch,Number(SensorActionEnum.actionID.off),SensorActionEnum.actionID.off,new Date().toUTCString());
+        }
 
         res.status(200).send(PostPowerSwitch.body.result); 
       } else { res.status(200).send([]); }
@@ -490,12 +497,14 @@ async function checkAcSwitchStatus(req, res, next) {
   });
   try {
     const device = await connection.getDevice(CheckSwitchStatusID);
-    if (device.params.switch == 'on'){
-      acSwitchObject.status = ThresholdsEnum.acControl.on;
-    }else if (device.params.switch == 'off'){
-      acSwitchObject.status = ThresholdsEnum.acControl.off;
+    if(device.params){
+      if (device.params.switch == 'on'){
+        acSwitchObject.status = ThresholdsEnum.acControl.on;
+      }else if (device.params.switch == 'off'){
+        acSwitchObject.status = ThresholdsEnum.acControl.off;
+      }
+      acSwitchObject.value = device.params.switch;
     }
-    acSwitchObject.value = device.params.switch;
     res.status(200).send(acSwitchObject);
   }
   catch(err) {
@@ -522,12 +531,29 @@ async function SwitchAcSwitchSonOff(req, res, next) {
     region: 'as',
   });
   try {
-    const switchStatus = await connection.toggleDevice(switchAcSwitchID);    if (switchStatus.status == 'ok'){
-      acSwitchObject.status = ThresholdsEnum.acControl.on;
-      helper.switchLogGenerator(SensorTypeEnum.sensorType.acSwitch,SensorActionEnum.actionID.on,userId,roomId,buildingId);
+    const switchStatus = await connection.toggleDevice(switchAcSwitchID); 
+    console.log('switchStatus1:',switchStatus);
+
+    if (switchStatus.status == 'ok'){
+      const device = await connection.getDevice(switchAcSwitchID);
+      console.log('switchStatus2:',switchStatus);
+      console.log('switchStatus.status:',switchStatus.status);
+      console.log('device.params.switch:',device.params.switch);
+      if(device.params){
+        if (device.params.switch == 'on'){
+          acSwitchObject.status = ThresholdsEnum.acControl.on;
+          helpers.switchLogGenerator(SensorTypeEnum.sensorType.acSwitch,SensorActionEnum.actionID.on,userId,roomId,buildingId);
+          helpers.historicalDataGenerator(SensorTypeEnum.sensorType.acSwitch,Number(SensorActionEnum.actionID.on),SensorActionEnum.actionID.on,new Date().toUTCString());
+        }else if (device.params.switch == 'off'){
+          acSwitchObject.status = ThresholdsEnum.acControl.off;
+          helpers.switchLogGenerator(SensorTypeEnum.sensorType.acSwitch,SensorActionEnum.actionID.off,userId,roomId,buildingId);
+          helpers.historicalDataGenerator(SensorTypeEnum.sensorType.acSwitch,Number(SensorActionEnum.actionID.off),SensorActionEnum.actionID.off,new Date().toUTCString());
+        }
+        acSwitchObject.value = switchStatus.status;
+      }
     }
-    acSwitchObject.value = switchStatus.status;
-    res.status(200).send(acSwitchObject);
+
+    res.status(200).send(acSwitchObject || []);
   }
   catch(err) {
     console.log('Switch Ac switch status error: ', err);
@@ -555,7 +581,8 @@ async function openDoorSwitch(req, res, next) {
 
       // console.log('openDoorSwitch', openDoorSwitch.body);
       if (openDoorSwitch.body) { 
-        helper.switchLogGenerator(SensorTypeEnum.sensorType.door,SensorActionEnum.actionID.on,userId,roomId,buildingId);
+        helpers.switchLogGenerator(SensorTypeEnum.sensorType.door,SensorActionEnum.actionID.on,userId,roomId,buildingId);
+        helpers.historicalDataGenerator(SensorTypeEnum.sensorType.door,Number(SensorActionEnum.actionID.on),SensorActionEnum.actionID.on,new Date().toUTCString());
         res.status(200).send(openDoorSwitch.body); } else { res.status(200).send([]); }
     })
     .catch(err => {
@@ -581,7 +608,7 @@ async function getTemperatureMeraki(req, res, next) {
       var temperatureObject = {};
       var temperatureDatavalue = temperatureData.body[0].value;
       if (temperatureDatavalue || temperatureDatavalue == 0) {
-        var thresholds =await helper.getThresholds();
+        var thresholds =await helpers.getThresholds();
         if (thresholds.temperature.high >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= thresholds.temperature.low) {
           temperatureObject.status=ThresholdsEnum.temperature.normal;
         }
@@ -648,7 +675,7 @@ async function getHumidityMeraki(req, res, next) {
       var humidityObject = {};
       var humidityDatavalue = humidityData.body[0].value;
       if (humidityDatavalue || humidityDatavalue == 0) {
-        var thresholds =await helper.getThresholds();
+        var thresholds =await helpers.getThresholds();
         if (thresholds.humidity.high >= Number(humidityDatavalue) && Number(humidityDatavalue) >= thresholds.humidity.low) {
           humidityObject.status=ThresholdsEnum.humidity.normal;
         }
@@ -716,7 +743,7 @@ async function getWaterLeakTest(req, res, next) {
         if (Number(waterLeakDatavalue) == 0) {
           waterLeakObject.status=ThresholdsEnum.waterLeak.normal;
         }else{
-          waterLeakObject.status=ThresholdsEnum.waterLeak.leak;
+          waterLeakObject.status=ThresholdsEnum.waterLeak.veryHigh;
         }
         waterLeakObject.value=waterLeakDatavalue;
         // console.log('waterLeakData', waterLeakData.body.properties.value);

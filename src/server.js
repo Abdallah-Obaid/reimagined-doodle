@@ -13,7 +13,7 @@ const err404 = require('./middleware/404.js');
 const err500 = require('./middleware/500.js');
 const timestamp = require('./middleware/timestamp.js');
 const userRouters = require('./router.js');
-['////////////////////////////////////////////////////////////////////////////////////////////////////////////////']
+
 
 /////////////////////////////////////////////////////////////
 
@@ -42,10 +42,3 @@ module.exports = {
     server.listen(PORT,'0.0.0.0', () => { console.log(`Listening on port ${PORT}`); });
   },
 };
-
-
-
-
-
-
-

@@ -9,7 +9,6 @@ var alertSeverity=
   high:4,
   veryLow:5,
   veryHigh:6,
-  leak:7,
 };
 sensorAlertSeverityEnum.alertSeverity = alertSeverity ;
 
