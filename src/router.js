@@ -77,11 +77,11 @@ console.log(FIBARO_PASSWORD , FIBARO_USER_NAME );
 
 // Direct calls
 
-loadRtspStream();
-rtspStreamRestarting();
-runMqtt();
+// loadRtspStream();
+// rtspStreamRestarting();
+// runMqtt();
 DynamicAlerts.initialeAlertService();
-HistoricalData.initialeHistoricalDataService();
+// HistoricalData.initialeHistoricalDataService();
 
 // Global Vars
 var soundAlarm = false;
@@ -253,15 +253,18 @@ async function getDust(req, res, next) {
       var dustObject = {};
       var dustDatavalue = dustData.body.properties.value;
       if (dustDatavalue || dustDatavalue == 0) {
-        var thresholds =await helpers.getThresholds();// for dust normal = moderate
-        if (thresholds.dust.normal >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
+        var thresholds =await helpers.getThresholds();
+        if (thresholds.dust.high >= Number(dustDatavalue) && Number(dustDatavalue) >= thresholds.dust.normal) {
+          console.log(111111111)
           dustObject.status=ThresholdsEnum.dust.normal;
         }
-        if (thresholds.dust.normal < Number(dustDatavalue) && Number(dustDatavalue) <= thresholds.dust.high) {
-          dustObject.status=ThresholdsEnum.dust.moderate;
-        }
-        if (Number(dustDatavalue) > thresholds.dust.high) {
+        if (thresholds.dust.high < Number(dustDatavalue)) {
+          console.log(222222222)
           dustObject.status=ThresholdsEnum.dust.high;
+        }
+        if (Number(dustDatavalue) < thresholds.dust.normal) {
+          console.log(333333333)
+          dustObject.status=ThresholdsEnum.dust.low;
         }
         dustObject.value=dustDatavalue;
         // console.log('dustData', dustData.body.properties.value);

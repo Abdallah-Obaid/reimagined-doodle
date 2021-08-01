@@ -41,20 +41,21 @@ async function getDust() {
     .then(async dustData => {
       var dustObject = {};
       var dustDatavalue = dustData.body.properties.value;
-      if (dustDatavalue || dustDatavalue == 0) {
+      if (dustDatavalue ||dustDatavalue == 0) {
         var thresholds =await helpers.getThresholds();
-        if (thresholds.dust.normal >= Number(dustDatavalue) && Number(dustDatavalue) >= 0) {
+        if (thresholds.dust.high >= Number(dustDatavalue) && Number(dustDatavalue) >= thresholds.dust.normal) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
-        if (thresholds.dust.normal < Number(dustDatavalue) && Number(dustDatavalue) <= thresholds.dust.high) {
-          dustObject.status=SensorAlertSeverityEnum.alertSeverity.moderate;
-        }
-        if (Number(dustDatavalue) > thresholds.dust.high) {
+        if (thresholds.dust.high < Number(dustDatavalue)) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.high;
         }
+        if (Number(dustDatavalue) < thresholds.dust.normal) {
+          dustObject.status=SensorAlertSeverityEnum.alertSeverity.low;
+        }
         helpers.historicalDataGenerator(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date().toUTCString());
+
         dustObject.value=dustDatavalue;
-      }
+      } 
   
     })
     .catch(err => {

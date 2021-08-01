@@ -17,8 +17,8 @@ ThresholdsEnum.humidity=humidity;
 
 var dust={
   normal: 1,
-  moderate: 2,
-  high:3,
+  high: 2,
+  low:3,
 };
 ThresholdsEnum.dust=dust;
 

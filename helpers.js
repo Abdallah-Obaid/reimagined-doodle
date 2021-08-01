@@ -75,31 +75,48 @@ helpers.getSeverity = function(value, severityWindow, above, bellow){
   if ((value > meduimA && value <= highA) || ( value < meduimB && value >= highB)){
     result = SensorAlertSeverityEnum.alertSeverity.medium;
   }
-  if ((value >= above && value <= meduimA) ||(value <= bellow && value >= meduimA)){
+  if ((value >= above && value <= meduimA) ||(value <= bellow && value >= meduimB)){
     result = SensorAlertSeverityEnum.alertSeverity.low;
+  }
+  if ((value > bellow  && value < above )){ //unused case
+    result = SensorAlertSeverityEnum.alertSeverity.normal;
   }
   return result;
 };
+
+// /** 
+//  * This function will calculate the dust severity
+//  * This is special case just for dust sensor where normal range under bellow "not between bellow and above"
+//  */
+// helpers.getDustSeverity = function(value, severityWindow, above, bellow){
+//   var high= above + severityWindow;
+//   var meduim= above;
+//   var low = bellow;
+//   var result;
+//   if (value >= low && value <= meduim){
+//     result = SensorAlertSeverityEnum.alertSeverity.low;
+//   }
+//   if (value > meduim && value <=high){
+//     result = SensorAlertSeverityEnum.alertSeverity.medium;
+//   }
+//   if(value > high){
+//     result = SensorAlertSeverityEnum.alertSeverity.high;
+//   }
+//   return result;
+// };
 
 /** 
- * This function will calculate the dust severity
- * This is special case just for dust sensor where normal range under bellow "not between bellow and above"
+ * This function will check for severity change
  */
-helpers.getDustSeverity = function(value, severityWindow, above, bellow){
-  var high= above + severityWindow;
-  var meduim= above;
-  var low = bellow;
+ helpers.checkSeverityChanged = function(value,severityWindow,above,bellow,oldSeverity){
   var result;
-  if (value >= low && value <= meduim){
-    result = SensorAlertSeverityEnum.alertSeverity.low;
+  var newSeverity = helpers.getSeverity(Number(value),severityWindow,above,bellow);
+  if (oldSeverity == newSeverity){
+    result = false;
   }
-  if (value > meduim && value <=high){
-    result = SensorAlertSeverityEnum.alertSeverity.medium;
-  }
-  if(value > high){
-    result = SensorAlertSeverityEnum.alertSeverity.high;
+  else{
+    result = true;  
   }
   return result;
 };
-
 module.exports = helpers;
