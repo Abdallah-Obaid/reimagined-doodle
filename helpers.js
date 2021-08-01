@@ -63,22 +63,19 @@ helpers.historicalDataGenerator= function(typeId,readingValue,readingStatus,read
 /** 
  * This function will calculate the severity
  */
-helpers.getSeverity = function(value, severityWindow, high, low){
-  var veryHighSev= high + 2*severityWindow;
-  var veryLowSev = low - 2*severityWindow;
-  var highSev= high + severityWindow;
-  var LowSev = low - severityWindow;
+helpers.getSeverity = function(value, severityWindow, above, bellow){
+  var highA= above + 2*severityWindow;
+  var highB = bellow - 2*severityWindow;
+  var meduimA= above + 1*severityWindow;
+  var meduimB = bellow - 1*severityWindow;
   var result;
-  if (value>veryHighSev){
-    result = SensorAlertSeverityEnum.alertSeverity.veryHigh;
-  }
-  if (veryHighSev >=value && value>=highSev){
+  if (value > highA || value < highB){
     result = SensorAlertSeverityEnum.alertSeverity.high;
   }
-  if (value < veryLowSev){
-    result = SensorAlertSeverityEnum.alertSeverity.veryLow;
+  if ((value > meduimA && value <= highA) || ( value < meduimB && value >= highB)){
+    result = SensorAlertSeverityEnum.alertSeverity.medium;
   }
-  if (LowSev >= value && value >= veryLowSev){
+  if ((value >= above && value <= meduimA) ||(value <= bellow && value >= meduimA)){
     result = SensorAlertSeverityEnum.alertSeverity.low;
   }
   return result;
@@ -86,15 +83,20 @@ helpers.getSeverity = function(value, severityWindow, high, low){
 
 /** 
  * This function will calculate the dust severity
+ * This is special case just for dust sensor where normal range under bellow "not between bellow and above"
  */
-helpers.getDustSeverity = function(value, severityWindow, high, low){
-  var veryHighSev= high + severityWindow;
-  var highSev= low;
+helpers.getDustSeverity = function(value, severityWindow, above, bellow){
+  var high= above + severityWindow;
+  var meduim= above;
+  var low = bellow;
   var result;
-  if (value > veryHighSev){
-    result = SensorAlertSeverityEnum.alertSeverity.veryHigh;
+  if (value >= low && value <= meduim){
+    result = SensorAlertSeverityEnum.alertSeverity.low;
   }
-  if (veryHighSev >=value && value >=highSev){
+  if (value > meduim && value <=high){
+    result = SensorAlertSeverityEnum.alertSeverity.medium;
+  }
+  if(value > high){
     result = SensorAlertSeverityEnum.alertSeverity.high;
   }
   return result;

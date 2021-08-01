@@ -27,7 +27,7 @@ var defualtDustStatus = 'normal';
 
 var alertSender= function(typeId,readingValue,readingStatus,alertSeverity,readingDate){
   superagent.post(`${CMS_URL}/Alerts/SaveAlert`)
-    .send({ TypeId: typeId, Description: readingValue ,Severity: readingStatus, AlarmDate: readingDate })
+    .send({ TypeId: typeId, Description: readingValue ,Status: readingStatus,Severity: alertSeverity, AlarmDate: readingDate })
     // .set('Content-Type', 'application/x-www-form-urlencoded')
     .then(done => {
       console.log('Alert sent: ',{ TypeId: typeId, Description: readingValue ,Status: readingStatus, Severity: alertSeverity, AlarmDate: readingDate });
@@ -182,6 +182,7 @@ async function getHumidityMeraki() {
       var humidityDatavalue = humidityData.body[0].value;
       if (humidityDatavalue || humidityDatavalue == 0) {
         var thresholds =await helpers.getThresholds();
+        console.log("thresholds",thresholds)
         if (thresholds.humidity.high >= Number(humidityDatavalue) && Number(humidityDatavalue) >= thresholds.humidity.low) {
           humidityObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
           defualtHumStatus= 'normal';
@@ -227,8 +228,8 @@ async function getWaterLeakTest() {
           if (Number(waterLeakDatavalue) == 0) {
             waterLeakObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
           }else{
-            waterLeakObject.status=SensorAlertSeverityEnum.alertSeverity.veryHigh;
-            waterLeakObject.severity=SensorAlertSeverityEnum.alertSeverity.veryHigh;
+            waterLeakObject.status=SensorAlertSeverityEnum.alertSeverity.high;
+            waterLeakObject.severity=SensorAlertSeverityEnum.alertSeverity.high;
             alertSender(SensorTypeEnum.sensorType.waterLeak,Number(waterLeakDatavalue),waterLeakObject.status,waterLeakObject.severity,new Date().toUTCString());
           }
           waterLeakObject.value=waterLeakDatavalue;
@@ -241,11 +242,11 @@ async function getWaterLeakTest() {
 }
 var initialeAlertService= function(){
   setInterval(()=>{
-    //getDust();
-    // getSmoke();
-    // getTemperatureMeraki();
+    getDust();
+    getSmoke();
+    getTemperatureMeraki();
     getHumidityMeraki();
-    // getWaterLeakTest();
+    getWaterLeakTest();
   }, ALERT_CHECK_INTERVAL); 
 };
 alerts.initialeAlertService= initialeAlertService;

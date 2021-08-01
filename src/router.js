@@ -81,11 +81,11 @@ console.log(FIBARO_PASSWORD , FIBARO_USER_NAME );
 // Direct calls
 
 // getSmokeThreshold();
-loadRtspStream();
-rtspStreamRestarting();
-runMqtt();
+// loadRtspStream();
+// rtspStreamRestarting();
+// runMqtt();
 DynamicAlerts.initialeAlertService();
-HistoricalData.initialeHistoricalDataService();
+// HistoricalData.initialeHistoricalDataService();
 
 // Global Vars
 var soundAlarm = false;
