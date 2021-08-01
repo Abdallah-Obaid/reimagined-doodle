@@ -23,9 +23,6 @@ router.get('/recordedVideo', loadVideo);
 router.get('/recordList', recordList);
 router.get('/sensorsNumber', sensorsNumber);
 
-// Threshold
-router.get('/getSmokeThreshold', getSmokeThreshold);
-
 // Fibaro routs
 router.get('/getTemperatureFibaro/', getTemperatureFibaro);
 router.get('/getHistoricalTemperatureFibaro/', getHistoricalTemperatureFibaro);
@@ -80,12 +77,11 @@ console.log(FIBARO_PASSWORD , FIBARO_USER_NAME );
 
 // Direct calls
 
-// getSmokeThreshold();
-// loadRtspStream();
-// rtspStreamRestarting();
-// runMqtt();
+loadRtspStream();
+rtspStreamRestarting();
+runMqtt();
 DynamicAlerts.initialeAlertService();
-// HistoricalData.initialeHistoricalDataService();
+HistoricalData.initialeHistoricalDataService();
 
 // Global Vars
 var soundAlarm = false;
@@ -817,31 +813,6 @@ async function getDoorStatus(req, res, next) {
       res.status(403).send('Door Status sensor error');
     });
 }
-
-/** 
- * This function will get the SmokeAlertThreshold sensor
- * @param {obj} req 
- * @param {obj} res 
- * @param {function} next 
- */
-async function getSmokeThreshold() {
-
-  superagent.get(`https://test.penguinin.com/cms_ahmad/Alerts/GetSmokeThresholds`)
-    .set('Content-Type', 'application/x-www-form-urlencoded')
-    .then(smokeThreshold => {
-      var body = smokeThreshold.body;
-      var parsThreshhold= body.thresholds;
-      if (smokeThreshold.body) { 
- 
-        return smokeThreshold.body; } else { console.log('Smoke threshold error');}
-
-    })
-    .catch(err => {
-      console.log('Smoke threshold error: ', err);
-      return 'Smoke threshold error';
-    });
-}
-
 
 /** 
  * This function will open the door from Akuvox sensor
