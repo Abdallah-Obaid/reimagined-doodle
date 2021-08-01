@@ -27,10 +27,10 @@ var defualtDustStatus = 'normal';
 
 var alertSender= function(typeId,readingValue,readingStatus,alertSeverity,readingDate){
   superagent.post(`${CMS_URL}/Alerts/SaveAlert`)
-    .send({ TypeId: typeId, Description: readingValue ,Status: readingStatus,Severity: alertSeverity, AlarmDate: readingDate })
+    .send({ TypeId: typeId, Description: readingValue ,ReadingStatus: readingStatus,Severity: alertSeverity, AlarmDate: readingDate })
     // .set('Content-Type', 'application/x-www-form-urlencoded')
     .then(done => {
-      console.log('Alert sent: ',{ TypeId: typeId, Description: readingValue ,Status: readingStatus, Severity: alertSeverity, AlarmDate: readingDate });
+      console.log('Alert sent: ',{ TypeId: typeId, Description: readingValue ,ReadingStatus: readingStatus, Severity: alertSeverity, AlarmDate: readingDate });
       console.log('Alert sent: ',`${CMS_URL}/Alerts/SaveAlert`);
     })
     .catch(err => {
