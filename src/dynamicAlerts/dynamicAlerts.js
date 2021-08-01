@@ -259,11 +259,11 @@ async function getWaterLeakTest() {
 }
 var initialeAlertService= function(){
   setInterval(()=>{
-    // getDust();
-    // getSmoke();
-    // getTemperatureMeraki();
+    getDust();
+    getSmoke();
+    getTemperatureMeraki();
     getHumidityMeraki();
-    // getWaterLeakTest();
+    getWaterLeakTest();
   }, ALERT_CHECK_INTERVAL); 
 };
 alerts.initialeAlertService= initialeAlertService;
