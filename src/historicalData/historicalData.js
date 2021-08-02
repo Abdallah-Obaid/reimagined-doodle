@@ -14,7 +14,11 @@ const FIBARO_USER_NAME_MERAKI = process.env.FIBARO_USER_NAME_MERAKI;
 const HISTORICAL_DATA_INTERVAL = process.env.HISTORICAL_DATA_INTERVAL;
 const SONOFF_PASSWORD = process.env.SONOFF_PASSWORD;
 const SONOFF_EMAIL = process.env.SONOFF_EMAIL;
+const MERAKI_API_KEY = process.env.MERAKI_API_KEY;
+const MERAKI_NETWORK_ID= process.env.MERAKI_NETWORK_ID;
 const CO2_SENSOR_ID = process.env.CO2_SENSOR_ID;
+const TEMPERATURE_SENSOR_SERIAL = process.env.TEMPERATURE_SENSOR_SERIAL;
+const HUMIDITY_SENSOR_ID = process.env.HUMIDITY_SENSOR_ID;
 const DUST_SENSOR_ID = process.env.DUST_SENSOR_ID;
 const AMPERE_SENSOR_ID = process.env.AMPERE_SENSOR_ID;
 const VOLT_SENSOR_ID = process.env.VOLT_SENSOR_ID;
@@ -43,13 +47,13 @@ async function getDust() {
       var dustDatavalue = dustData.body.properties.value;
       if (dustDatavalue ||dustDatavalue == 0) {
         var thresholds =await helpers.getThresholds();
-        if (thresholds.dust.high >= Number(dustDatavalue) && Number(dustDatavalue) >= thresholds.dust.normal) {
+        if (thresholds.dust.high >= Number(dustDatavalue) && Number(dustDatavalue) >= thresholds.dust.low) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
         }
         if (thresholds.dust.high < Number(dustDatavalue)) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.high;
         }
-        if (Number(dustDatavalue) < thresholds.dust.normal) {
+        if (Number(dustDatavalue) < thresholds.dust.low) {
           dustObject.status=SensorAlertSeverityEnum.alertSeverity.low;
         }
         helpers.historicalDataGenerator(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,new Date().toUTCString());
@@ -95,6 +99,80 @@ async function getSmoke() {
     })
     .catch(err => {
       console.log('Co2 alert sensor error: ', err);
+    });
+}
+
+/** 
+ * This function will get the temperature data and generate historical data from Meraki sensor
+ * @param {obj} req 
+ * @param {obj} res 
+ * @param {function} next 
+ */
+ async function getTemp() {
+  var deviceSerial = TEMPERATURE_SENSOR_SERIAL;
+  var merakiNetworkID = MERAKI_NETWORK_ID;
+  var metric = 'temperature';
+  superagent.get(`https://api.meraki.com/api/v1/networks/${merakiNetworkID}/sensors/stats/latestBySensor?metric=${metric}&serial=${deviceSerial}`)
+    .set('Content-Type', 'application/x-www-form-urlencoded')
+    .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
+    .then(async temperatureData => {
+      var temperatureObject = {};
+      var temperatureDatavalue = temperatureData.body[0].value;
+      if (temperatureDatavalue ||temperatureDatavalue == 0) {
+        var thresholds =await helpers.getThresholds();
+        if (thresholds.temperature.high >= Number(temperatureDatavalue) && Number(temperatureDatavalue) >= thresholds.temperature.low) {
+          temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
+        }
+        if (thresholds.temperature.high < Number(temperatureDatavalue)) {
+          temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.high;
+        }
+        if (Number(temperatureDatavalue) < thresholds.temperature.low) {
+          temperatureObject.status=SensorAlertSeverityEnum.alertSeverity.low;
+        }
+        helpers.historicalDataGenerator(SensorTypeEnum.sensorType.temperature,Number(temperatureDatavalue),temperatureObject.status,new Date().toUTCString());
+
+        temperatureObject.value=temperatureDatavalue;
+      } 
+    })
+    .catch(err => {
+      console.log('Temperature alert sensor error: ', err);
+    });
+}
+
+/** 
+ * This function will get the humidity data and generate historical data from Meraki sensor
+ * @param {obj} req 
+ * @param {obj} res 
+ * @param {function} next 
+ */
+ async function getHumidity() {
+  var deviceSerial = HUMIDITY_SENSOR_ID;
+  var merakiNetworkID = MERAKI_NETWORK_ID;
+  var metric = 'humidity';
+  superagent.get(`https://api.meraki.com/api/v1/networks/${merakiNetworkID}/sensors/stats/latestBySensor?metric=${metric}&serial=${deviceSerial}`)
+    .set('Content-Type', 'application/x-www-form-urlencoded')
+    .set('X-Cisco-Meraki-API-Key', MERAKI_API_KEY)
+    .then(async humidityData => {
+      var humidityObject = {};
+      var humidityDatavalue = humidityData.body[0].value;
+      if (humidityDatavalue ||humidityDatavalue == 0) {
+        var thresholds =await helpers.getThresholds();
+        if (thresholds.humidity.high >= Number(humidityDatavalue) && Number(humidityDatavalue) >= thresholds.humidity.low) {
+          humidityObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
+        }
+        if (thresholds.humidity.high < Number(humidityDatavalue)) {
+          humidityObject.status=SensorAlertSeverityEnum.alertSeverity.high;
+        }
+        if (Number(humidityDatavalue) < thresholds.humidity.low) {
+          humidityObject.status=SensorAlertSeverityEnum.alertSeverity.low;
+        }
+        helpers.historicalDataGenerator(SensorTypeEnum.sensorType.humidity,Number(humidityDatavalue),humidityObject.status,new Date().toUTCString());
+
+        humidityObject.value=humidityDatavalue;
+      } 
+    })
+    .catch(err => {
+      console.log('Humidity alert sensor error: ', err);
     });
 }
 
@@ -216,6 +294,8 @@ var initialeHistoricalDataService= function(){
   setInterval(()=>{
     getDust();
     getSmoke();
+    getTemp();
+    getHumidity();
     getPower();
     saveSwitchStatusHistorical() ;
     saveAcSwitchStatusHistorical();

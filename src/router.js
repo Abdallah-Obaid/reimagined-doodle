@@ -254,13 +254,13 @@ async function getDust(req, res, next) {
       var dustDatavalue = dustData.body.properties.value;
       if (dustDatavalue || dustDatavalue == 0) {
         var thresholds =await helpers.getThresholds();
-        if (thresholds.dust.high >= Number(dustDatavalue) && Number(dustDatavalue) >= thresholds.dust.normal) {
+        if (thresholds.dust.high >= Number(dustDatavalue) && Number(dustDatavalue) >= thresholds.dust.low) {
           dustObject.status=ThresholdsEnum.dust.normal;
         }
         if (thresholds.dust.high < Number(dustDatavalue)) {
           dustObject.status=ThresholdsEnum.dust.high;
         }
-        if (Number(dustDatavalue) < thresholds.dust.normal) {
+        if (Number(dustDatavalue) < thresholds.dust.low) {
           dustObject.status=ThresholdsEnum.dust.low;
         }
         dustObject.value=dustDatavalue;
