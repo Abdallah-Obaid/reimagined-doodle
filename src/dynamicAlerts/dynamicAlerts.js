@@ -75,7 +75,7 @@ async function getDust() {
         }
         if (Number(dustDatavalue) < thresholds.dust.low && (defualtDustStatus=='normal'||defualtDustStatus=='high' ||severityChangeChecker)) {
           defualtDustStatus='low';
-          dustObject.status=SensorAlertSeverityEnum.alertSeverity.normal;
+          dustObject.status=SensorAlertSeverityEnum.alertSeverity.low;
           defualtDustSeverity=helpers.getSeverity(Number(dustDatavalue),thresholds.dust.severityWindow,thresholds.dust.high,thresholds.dust.low); 
           dustObject.severity=defualtDustSeverity;
           alertSender(SensorTypeEnum.sensorType.dust,Number(dustDatavalue),dustObject.status,dustObject.severity,new Date().toUTCString());
