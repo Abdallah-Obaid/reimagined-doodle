@@ -68,6 +68,7 @@ const FIBARO_USER_NAME_MERAKI = process.env.FIBARO_USER_NAME_MERAKI;
 const CAMERAIP = process.env.CAMERAIP;
 const CAMERAPORT = process.env.CAMERAPORT;
 const RECORDING_DIRECTORY = process.env.RECORDING_DIRECTORY;
+const LOADRECOARD_DIRECTORY = process.env.LOADRECOARD_DIRECTORY;
 const SOCKET_PORT = process.env.SOCKET_PORT;
 const MERAKI_API_KEY = process.env.MERAKI_API_KEY;
 const SENSORS_NUMBER = process.env.SENSORS_NUMBER;
@@ -864,7 +865,7 @@ async function getSoundAlarm(req, res, next) {
 */
 function loadVideo(req, res, next) {
   var videoNameQ = req.query.videoName;
-  const path = `recorded_videos/${videoNameQ}.mp4`;
+  const path = `${LOADRECOARD_DIRECTORY}/${videoNameQ}.mp4`;
   const stat = fs.statSync(path);
   const fileSize = stat.size;
   const range = req.headers.range;
@@ -904,7 +905,7 @@ function recordList(req, res, next) {
   try {
     var filterDate = req.query.filterDate;
     console.log('filterDate:',filterDate);
-    const testFolder = './recorded_videos/';
+    const testFolder = LOADRECOARD_DIRECTORY;
     var fullFileName = [];
     fs.readdir(testFolder, (err, files) => {
       files.forEach(file => {
