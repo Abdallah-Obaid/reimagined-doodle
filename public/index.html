@@ -28,7 +28,7 @@
     <script type="text/javascript" src="jsmpeg.min.js"></script>
     <script type="text/javascript">
       var canvas = document.getElementById('video-canvas');
-      var url = 'wss://penguinin.site/'; // will take the host in front end
+      var url = 'wss://'+document.location.hostname+':9999/'; // will take the host in front end
       var player = new JSMpeg.Player(url, {canvas: canvas, });
       $('#video-canvas').on('click',()=>{
         console.log(player)
