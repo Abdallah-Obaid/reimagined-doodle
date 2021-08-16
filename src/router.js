@@ -100,7 +100,7 @@ async function loadRtspStream(req, res, next) {
   var recordDuration = 120; //in sec
   var stream = await new Stream({
     name: 'name',
-    streamUrl: `rtsp://${CAMERAIP}:${CAMERAPORT}/live`,//`rtsp://${CAMERAIP}:${CAMERAPORT}/live`,//'rtsp://192.168.128.2:9000/live'
+    streamUrl: `rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov`,//`rtsp://${CAMERAIP}:${CAMERAPORT}/live`,//'rtsp://192.168.128.2:9000/live'
     wsPort: SOCKET_PORT,
     ffmpegOptions: { // options ffmpeg flags
       '-c': 'copy',
