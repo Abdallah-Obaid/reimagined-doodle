@@ -80,9 +80,9 @@ console.log(FIBARO_PASSWORD , FIBARO_USER_NAME );
 
 loadRtspStream();
 rtspStreamRestarting();
-runMqtt();
-DynamicAlerts.initialeAlertService();
-HistoricalData.initialeHistoricalDataService();
+// runMqtt();
+// DynamicAlerts.initialeAlertService();
+// HistoricalData.initialeHistoricalDataService();
 
 // Global Vars
 var soundAlarm = false;
