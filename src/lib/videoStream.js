@@ -1,8 +1,7 @@
 var Mpeg1Muxer, STREAM_MAGIC_BYTES, VideoStream, events, util, ws;
 
 ws = require('ws');
-const https = require('https');
-const fs = require('fs');
+
 util = require('util');
 
 events = require('events');
@@ -88,33 +87,37 @@ VideoStream.prototype.startMpeg1Stream = function() {
   return this;
 };
    var WsServer;
-   VideoStream.prototype.pipeStreamToSocketServer = function() {
-    const server = https.createServer({
-      cert: fs.readFileSync('./cert/cert.pem'),
-      key: fs.readFileSync('./cert/key.pem'),
-    }).listen(9999, '0.0.0.0');
-    this.wsServer = new ws.Server({
-      server
-    })
-    this.wsServer.on("connection", (socket, request) => {
-      return this.onSocketConnect(socket, request)
-    })
-    this.wsServer.broadcast = function(data, opts) {
-      var results
-      results = []
-      for (let client of this.clients) {
-        if (client.readyState === 1) {
-          results.push(client.send(data, opts))
-        } else {
-          results.push(console.log("Error: Client from remoteAddress " + client.remoteAddress + " not connected."))
-        }
+VideoStream.prototype.pipeStreamToSocketServer = function() {
+  // console.log("WsServerWsServerWsServerWsServerWsServer1",WsServer)
+  if(WsServer){WsServer.close()} // To check if sockect olready running and close it to open it again 
+  this.wsServer = new ws.Server({
+    port: this.wsPort,
+    // host: "192.168.1.1"
+  });
+  WsServer =this.wsServer;
+  this.wsServer.on('connection', (socket, request) => {
+    return this.onSocketConnect(socket, request);
+  });
+  this.wsServer.on('error',(error)=>{
+     console.log('Socket error: ',error)
+  })
+  this.wsServer.broadcast = function(data, opts) {
+    var results;
+    results = [];
+    for (let client of this.clients) {
+      if (client.readyState === 1) {
+        results.push(client.send(data, opts));
+      } else {
+        results.push(console.log('Error: Client from remoteAddress ' + client.remoteAddress + ' not connected.'));
       }
-      return results
     }
-    return this.on('camdata', (data) => {
-      return this.wsServer.broadcast(data)
-    })
-  }
+    return results;
+  };
+  return this.on('camdata', (data) => {
+    // console.log('data',data)
+    return this.wsServer.broadcast(data);
+  });
+};
 
 VideoStream.prototype.onSocketConnect = function(socket, request) {
   var streamHeader;
